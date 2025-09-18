@@ -1,0 +1,76 @@
+/* Contenedor general del login, reutilizando el degradado */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* El degradado se define "to left" para que inicie en el lado derecho y finalice en el izquierdo.
+       En este ejemplo:
+        - 0%: rojo brillante (#ff0000)
+        - 50%: rojo muy oscuro (#2a0000) (casi negro)
+        - 100%: vuelve a rojo (#ff0000)
+       Puedes ajustar los porcentajes para que la transición sea más rápida o más suave */
+    background: linear-gradient(to left, #2a0000 100%, #ff0000 100%);
+    transition: background 3s ease;
+  }
+  
+  
+  /* Tarjeta del login (similar a la "card" que usas en el sidebar) */
+  .login-card {
+    width: 100%;
+    max-width: 28rem;  /* Equivalente a max-w-md; ajústalo según necesites */
+    background-color: white;
+    border-radius: 0.5rem; /* Rounded */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+  }
+  
+  /* Título del login */
+  .login-title {
+    font-size: 1.5rem; /* equivalente a text-2xl */
+    font-weight: 600;
+    text-align: center;
+    color: #1f2937; /* text-gray-800 */
+    margin-bottom: 1rem;
+  }
+  
+  /* Estilos para los inputs (reutilizando concepto de focus de tu CSS de sidebar) */
+  .login-input {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db; /* similar a border-gray-300 */
+    border-radius: 0.375rem; /* rounded-md */
+    outline: none;
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .login-input:focus {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); /* Focus ring de blue-600 */
+  }
+  
+  /* Botón de login */
+  .login-button {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    background-color: #2563eb;  /* blue-600 */
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 0.375rem; /* rounded-md */
+    transition: background-color 0.3s ease;
+  }
+  
+  .login-button:hover {
+    background-color: #1d4ed8; /* blue-700 */
+  }
+  
+  /* Estilos para el mensaje de error */
+  .login-error {
+    background-color: #fecaca; /* red-100 */
+    border: 1px solid #f87171; /* red-400 */
+    color: #b91c1c; /* red-700 */
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+  }
+  

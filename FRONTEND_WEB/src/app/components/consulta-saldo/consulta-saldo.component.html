@@ -1,0 +1,102 @@
+<!-- ===============  CONTENEDOR PRINCIPAL  =============== -->
+<div class="flex flex-col min-h-screen">
+
+  <!-- ===============  HEADER =============== -->
+  <header class="bg-gradient-to-r from-blue-600 to-black text-white p-4">
+    <div class="flex justify-center items-center">
+      <a href="https://procomin.mx" target="_blank" rel="noopener">
+        <img src="assets/procomin.png"
+             alt="PROCOMIN"
+             class="h-12 object-contain hover:scale-105 transition-transform duration-200" />
+      </a>
+    </div>
+  </header>
+
+  <!-- ============  CONTENIDO PRINCIPAL  ============ -->
+  <main class="flex-1 flex flex-col items-center py-8 px-4 bg-gray-50">
+    <div class="w-full md:max-w-2xl lg:max-w-3xl bg-white p-8 rounded-lg shadow-lg">
+
+      <h2 class="text-3xl font-semibold mb-2 text-center">Consulta de Saldo</h2>
+
+      <p class="text-gray-700 mb-6 text-center">
+        Ingresa tu código de barras o escanea el QR para conocer tu saldo.
+      </p>
+
+      <input
+        type="text"
+        [(ngModel)]="codigo"
+        placeholder="Código de Barras o texto de QR"
+        class="w-full border border-gray-300 p-3 rounded mb-4 text-center focus:ring-2 focus:ring-blue-400"
+      />
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <button
+          (click)="consultarPorCodigo()"
+          [disabled]="!codigo"
+          class="w-full sm:flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded disabled:opacity-50">
+          <i class="fas fa-barcode mr-2"></i> Consultar Código
+        </button>
+
+        <button
+          (click)="openQrScanner()"
+          class="w-full sm:flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded flex items-center justify-center">
+          <i class="fas fa-camera mr-2"></i> Escanear QR
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===============  FOOTER  =============== -->
+  <footer class="footer">
+    <div class="footer-content">
+      <img src="assets/halucar.jpeg"
+           alt="Halucar Desarrollo"
+           class="footer-image" />
+      <p>&copy; 2024 Halucar Desarrollo "Procomin PDV". Todos los derechos reservados.</p>
+    </div>
+    <div class="footer-links">
+      <a href="#" class="footer-link">Política de Privacidad</a>
+      <a href="#" class="footer-link">Términos de Servicio</a>
+      <a href="#" class="footer-link">Contacto</a>
+    </div>
+  </footer>
+
+  <!-- ===============  MODAL RESULTADO  =============== -->
+  <div *ngIf="showModal"
+       class="fixed inset-0 z-40 bg-black/50 flex items-center justify-center">
+    <div class="bg-white w-11/12 max-w-md p-6 rounded shadow-lg text-center animate-scaleIn">
+      <h3 class="text-2xl font-bold mb-4">Resultado</h3>
+
+      <ng-container *ngIf="!errorMsg; else errorTpl">
+        <p class="text-gray-700 mb-2">Empleado ID: <span class="font-semibold">{{ empleadoId }}</span></p>
+        <p class="text-3xl font-bold text-green-600">${{ saldo | number:'1.2-2' }}</p>
+      </ng-container>
+
+      <ng-template #errorTpl>
+        <p class="text-red-600 font-semibold">{{ errorMsg }}</p>
+      </ng-template>
+
+      <button (click)="closeModal()"
+              class="mt-6 bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded">
+        Cerrar
+      </button>
+    </div>
+  </div>
+
+  <!-- ===============  MODAL ESCÁNER QR  =============== -->
+  <div *ngIf="showQrModal"
+       class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
+    <div class="bg-white w-11/12 sm:w-auto p-4 rounded shadow-lg animate-scaleIn">
+      <h3 class="text-xl font-semibold mb-4 text-center">Escanea tu código QR</h3>
+
+      <!-- Contenedor requerido por html5-qrcode -->
+      <div id="qr-reader"
+           class="w-72 h-72 bg-gray-100 rounded overflow-hidden mx-auto"></div>
+
+      <button (click)="closeQrScanner()"
+              class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PROCOMIN</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <app-root></app-root>
+  
+  <!-- Script para detectar Electron -->
+  <script>
+    if (typeof window.electronAPI !== 'undefined') {
+      window.isElectron = true;
+    } else {
+      window.isElectron = false;
+      console.log('No se detectó Electron - Modo navegador');
+    }
+  </script>
+
+  <script>
+  window.onerror = function(message, source, lineno, colno, error) {
+    console.error("Error global:", message, source, lineno, colno, error);
+  };
+</script>
+
+</body>
+</html>

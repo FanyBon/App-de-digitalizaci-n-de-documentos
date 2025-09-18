@@ -1,0 +1,175 @@
+<aside [class]="isSidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'">
+  <!-- Encabezado del Sidebar -->
+  <div class="header flex items-center p-4 cursor-pointer" (click)="toggleSidebar()">
+    <span class="fas fa-bars"></span> <!-- Ícono del menú -->
+    <h2 *ngIf="isSidebarExpanded" class="ml-2">Procomin PDV</h2>
+  </div>
+
+  <!-- Panel de Control Label -->
+  <p *ngIf="isSidebarExpanded" class="text-sm text-gray-400 pl-8 mb-4">Panel de Control</p>
+
+  <!-- Menú de Navegación -->
+  <nav class="flex flex-col space-y-2">
+
+    <!-- Menú Comedores -->
+    <div class="menu-item">
+      <button (click)="toggleSubmenu('comedores')"
+        class="flex items-center justify-between w-full p-2 hover:bg-gray-700 rounded transition">
+        <div class="flex items-center space-x-2">
+          <span class="fas fa-utensils"></span>
+          <span *ngIf="isSidebarExpanded">Comedores</span>
+        </div>
+        <span *ngIf="isSidebarExpanded"
+          [class]="isSubmenuOpen('comedores') ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></span>
+      </button>
+      <div *ngIf="isSidebarExpanded && isSubmenuOpen('comedores')" class="pl-8 space-y-1">
+        <!-- Si el usuario no está autenticado, solo se muestra el enlace de Login -->
+        <a *ngIf="!isAuthenticated" [routerLink]="'/comedores/logincontrolcomidas'"
+          class="flex items-center p-2 hover:bg-gray-700 rounded">
+          <span class="fas fa-user-lock mr-2"></span> Login Control Comidas
+        </a>
+        <!-- Si el usuario está autenticado, se muestran los demás submenús -->
+        <ng-container *ngIf="isAuthenticated">
+          <a [routerLink]="'/comedores/control-comidas'" class="flex items-center p-2 hover:bg-gray-700 rounded">
+            <span class="fas fa-clipboard-list mr-2"></span> Control de Comidas
+          </a>
+          <a [routerLink]="'/comedores/usuarios'" class="flex items-center p-2 hover:bg-gray-700 rounded">
+            <span class="fas fa-user mr-2"></span> Usuarios
+          </a>
+          <a [routerLink]="'/comedores/empresas'" class="flex items-center p-2 hover:bg-gray-700 rounded">
+            <span class="fas fa-building mr-2"></span> Empresas
+          </a>
+          <a [routerLink]="'/comedores/empleados'" class="flex items-center p-2 hover:bg-gray-700 rounded">
+            <span class="fas fa-id-card mr-2"></span> Empleados
+          </a>
+          <a [routerLink]="'/comedores/importar-empleados'" class="flex items-center p-2 hover:bg-gray-700 rounded">
+            <span class="fas fa-file-csv mr-2"></span>
+            <span *ngIf="isSidebarExpanded">Carga por CSV</span>
+          </a>
+          <a [routerLink]="'/comedores/asistencias'" class="flex items-center p-2 hover:bg-gray-700 rounded">
+            <span class="fas fa-calendar-check mr-2"></span> Asistencias
+          </a>
+          <a [routerLink]="'/comedores/imprecion-tarjetas'" class="flex items-center p-2 hover:bg-gray-700 rounded">
+            <span class="fas fa-id-badge mr-2"></span> Impresión de Tarjetas
+          </a>
+          <a [routerLink]="'/comedores/reporte-comidas'" class="flex items-center p-2 hover:bg-gray-700 rounded">
+            <span class="fas fa-chart-bar mr-2"></span> Reporte de Comidas
+          </a>
+          <!-- Botón de Cerrar Sesión que abre el modal -->
+          <button (click)="abrirModalLogout()"
+            class="w-full text-left flex items-center p-2 bg-red-600 text-white rounded hover:bg-red-700"> <span
+              class="fas fa-sign-out-alt mr-2"></span> Cerrar Sesión
+          </button>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Menú Punto de Venta -->
+    <div class="menu-item">
+      <button (click)="toggleSubmenu('pdv')"
+        class="flex items-center justify-between w-full p-2 hover:bg-gray-700 rounded transition">
+        <div class="flex items-center space-x-2">
+          <span class="fas fa-cash-register"></span>
+          <span *ngIf="isSidebarExpanded">Punto de Venta</span>
+        </div>
+        <span *ngIf="isSidebarExpanded"
+          [class]="isSubmenuOpen('pdv') ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></span>
+      </button>
+      <div *ngIf="isSidebarExpanded && isSubmenuOpen('pdv')" class="pl-8 space-y-1">
+        <a [routerLink]="['/pdv/venta']" class="flex items-center p-2 hover:bg-gray-700 rounded">
+          <span class="fas fa-shopping-cart mr-2"></span> Venta
+        </a>
+        <a [routerLink]="['/pdv/clientes']" class="flex items-center p-2 hover:bg-gray-700 rounded">
+          <span class="fas fa-user mr-2"></span> Clientes
+        </a>
+        <!-- Nuevo enlace Informe de Ventas -->
+        <a [routerLink]="['/pdv/informe-ventas']" class="flex items-center p-2 hover:bg-gray-700 rounded">
+          <span class="fas fa-chart-bar mr-2"></span> Informe de Ventas
+        </a>
+        <!-- Productos -->
+        <a [routerLink]="['/pdv/productos']" class="flex items-center p-2 hover:bg-gray-700 rounded">
+          <span class="fas fa-box-open mr-2"></span>
+          <span *ngIf="isSidebarExpanded">Productos</span>
+        </a>
+
+        <!-- Configuración de Impresora -->
+        <a [routerLink]="['/pdv/configuracion-impresora']" class="flex items-center p-2 hover:bg-gray-700 rounded">
+          <span class="fas fa-print mr-2"></span>
+          <span *ngIf="isSidebarExpanded">Config. Impresora</span>
+        </a>
+      </div>
+    </div>
+
+
+    <!-- Modal de confirmación de cierre de sesión -->
+    <div *ngIf="showLogoutModal" class="fixed inset-0 flex items-center justify-center z-50">
+      <!-- Fondo oscuro -->
+      <div class="fixed inset-0 bg-black opacity-50"></div>
+      <!-- Contenedor del modal -->
+      <div class="bg-white rounded-md p-6 z-50 w-80">
+        <h3 class="text-xl font-semibold mb-4">Confirmar Cierre de Sesión</h3>
+        <p class="mb-4">¿Estás seguro de que deseas cerrar sesión?</p>
+        <div class="flex justify-end space-x-4">
+          <button (click)="cancelarLogout()" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+            Cancelar
+          </button>
+          <button (click)="confirmarLogoutcontrolcoidas()"
+            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menú de Sistemas -->
+    <div>
+      <a (click)="toggleSubmenu('sistemas')"
+        class="flex items-center p-2 hover:bg-gray-700 rounded transition cursor-pointer">
+        <span class="fas fa-tools"></span>
+        <span *ngIf="isSidebarExpanded" class="ml-2">Sistemas</span>
+      </a>
+
+      <!-- Submenús para Sistemas -->
+      <div *ngIf="isSidebarExpanded && isSubmenuOpen('sistemas')" class="pl-8 space-y-1">
+        <!-- CRUD de Usuarios -->
+        <a [routerLink]="'/procomin/crud-usuarios'" class="flex items-center p-2 hover:bg-gray-700 rounded">
+          <span class="fas fa-users mr-2"></span> CRUD de Usuarios
+        </a>
+
+        <!-- Submenú Perfiles -->
+        <a (click)="toggleSubmenu('perfiles')" class="flex items-center p-2 hover:bg-gray-700 rounded cursor-pointer">
+          <span class="fas fa-user-shield"></span>
+          <span class="ml-2">Perfiles</span>
+          <span class="ml-auto fas"
+            [ngClass]="{'fa-chevron-down': !isSubmenuOpen('perfiles'), 'fa-chevron-up': isSubmenuOpen('perfiles')}"></span>
+        </a>
+
+        <!-- Submenús dentro de Perfiles -->
+        <div *ngIf="isSubmenuOpen('perfiles')" class="pl-8 space-y-1">
+          <a [routerLink]="'/procomin/crud-perfiles'" class="flex items-center p-2 hover:bg-gray-700 rounded">
+            <span class="fas fa-id-badge mr-2"></span> Perfiles
+          </a>
+          <a [routerLink]="'/procomin/roles-perfiles'" class="flex items-center p-2 hover:bg-gray-700 rounded">
+            <span class="fas fa-user-tag mr-2"></span> Roles de Perfiles
+          </a>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Otros Menús -->
+    <a [routerLink]="'/ajustes'" class="flex items-center p-2 hover:bg-gray-700 rounded transition">
+      <span class="fas fa-cog"></span>
+      <span *ngIf="isSidebarExpanded" class="ml-2">Ajustes</span>
+    </a>
+
+  </nav>
+
+  <!-- Botón de Cerrar Sesión -->
+  <div class="mt-auto p-2">
+    <a (click)="confirmLogout()" class="flex items-center p-2 bg-red-600 hover:bg-red-500 rounded transition">
+      <span class="fas fa-sign-out-alt"></span>
+      <span *ngIf="isSidebarExpanded" class="ml-2">Cerrar Sesión</span>
+    </a>
+  </div>
+</aside>

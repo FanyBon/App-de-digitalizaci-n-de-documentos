@@ -1,0 +1,284 @@
+<!-- src/app/modules/control_comidas/asistencias/asistencias.component.html -->
+<div class="asistencias-container min-h-screen w-full p-8 bg-gray-100">
+  <h1 class="text-3xl font-bold text-center mb-4">Gestión de Asistencias</h1>
+  <p class="text-center mb-6 text-gray-600">Administración de asistencias: crear, editar, eliminar y exportar.</p>
+  
+  <!-- Contenedor principal: filtros arriba, botones abajo -->
+<div class="mb-6 flex flex-col items-center space-y-6">
+
+  <!-- Filtros -->
+  <!-- Wrapper que fuerza una sola línea -->
+<div class="flex flex-wrap items-center gap-4">
+
+  <!-- Fecha Inicio -->
+  <div class="flex items-center">
+    <label for="fecha_inicio" class="mr-2 w-24 text-left">
+      Fecha Inicio
+    </label>
+    <input
+      id="fecha_inicio"
+      type="date"
+      [(ngModel)]="filtroFechaInicio"
+      name="fecha_inicio"
+      class="w-full max-w-xs border border-gray-300 px-3 py-2 rounded text-left"
+    />
+  </div>
+
+  <!-- Fecha Fin -->
+  <div class="flex items-center">
+    <label for="fecha_fin" class="mr-2 w-24 text-left">
+      Fecha Fin
+    </label>
+    <input
+      id="fecha_fin"
+      type="date"
+      [(ngModel)]="filtroFechaFin"
+      name="fecha_fin"
+      class="w-full max-w-xs border border-gray-300 px-3 py-2 rounded text-left"
+    />
+  </div>
+
+  <!-- Empresa -->
+  <div class="flex items-center">
+    <label for="empresa_id" class="mr-2 w-24 text-left">
+      Empresa
+    </label>
+    <select
+      id="empresa_id"
+      [(ngModel)]="filtroEmpresaId"
+      name="empresa_id"
+      class="w-full max-w-xs border border-gray-300 px-3 py-2 rounded text-left"
+    >
+      <option [ngValue]="null" disabled hidden>Selecciona empresa</option>
+      <option *ngFor="let emp of empresas" [ngValue]="emp.id">
+        {{ emp.nombre }}
+      </option>
+    </select>
+  </div>
+
+</div>
+
+
+  <!-- Botones -->
+  <div class="flex flex-wrap justify-center items-center gap-3">
+    <button
+      (click)="filtrarAsistencias()"
+      title="Filtrar"
+      class="p-3 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+    >
+      <i class="fas fa-filter"></i>
+    </button>
+
+    <button
+      (click)="limpiarFiltros()"
+      title="Limpiar filtros"
+      class="p-3 bg-gray-500 text-white rounded hover:bg-gray-600"
+    >
+      <i class="fas fa-eraser"></i>
+    </button>
+
+    <button
+      (click)="abrirModalCrear()"
+      title="Agregar asistencia"
+      class="p-3 bg-green-600 text-white rounded hover:bg-green-700"
+    >
+      <i class="fas fa-plus"></i>
+    </button>
+
+    <button
+      (click)="exportarExcel()"
+      title="Exportar Excel"
+      class="p-3 bg-blue-600 text-white rounded hover:bg-blue-700"
+    >
+      <i class="fas fa-file-excel"></i>
+    </button>
+
+    <button
+      (click)="exportarCsv()"
+      title="Exportar CSV"
+      class="p-3 bg-purple-600 text-white rounded hover:bg-purple-700"
+    >
+      <i class="fas fa-file-csv"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Mensaje de error -->
+<div *ngIf="mensajeError" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-center max-w-2xl mx-auto">
+  <strong>Error:</strong> {{ mensajeError }}
+</div>
+
+  
+  <!-- Tabla de Asistencias responsiva -->
+<div class="overflow-x-auto shadow rounded-lg">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Empleado</th>
+        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Empresa</th>
+        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Horario</th>
+        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Método</th>
+        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      <tr *ngFor="let asistencia of asistencias" class="hover:bg-gray-50">
+
+        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+          {{ asistencia.id }}
+        </td>
+
+        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+          {{ asistencia.empleado_id }}
+        </td>
+
+        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+          {{ asistencia.empresa_id }}
+        </td>
+
+        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+          {{ asistencia.fecha | date:'short' }}
+        </td>
+
+        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+          {{ asistencia.horario }}
+        </td>
+
+        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+          {{ asistencia.metodo }}
+        </td>
+
+        <!-- Acciones solo iconos, tooltip vía title -->
+        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+          <div class="flex justify-center space-x-4">
+            <button
+              (click)="abrirModalEditar(asistencia)"
+              title="Editar"
+              class="text-blue-600 hover:text-blue-800 focus:outline-none"
+            >
+              <i class="fas fa-edit"></i>
+            </button>
+            <button
+              (click)="abrirModalEliminar(asistencia)"
+              title="Eliminar"
+              class="text-red-600 hover:text-red-800 focus:outline-none"
+            >
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </td>
+
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- Modal para Crear Asistencia -->
+<div *ngIf="mostrarModalCrear" class="fixed inset-0 flex items-center justify-center z-50">
+  <div class="fixed inset-0 bg-black opacity-50"></div>
+  <div class="bg-white p-6 rounded-md z-50 w-96">
+    <h3 class="text-xl font-semibold mb-4">Crear Asistencia</h3>
+    <form (ngSubmit)="confirmarCrearAsistencia()">
+      <div class="mb-4">
+        <label class="block font-medium mb-2" for="empleado_id">Empleado ID</label>
+        <input type="number" id="empleado_id" [(ngModel)]="nuevaAsistencia.empleado_id" name="empleado_id" class="w-full border border-gray-300 px-3 py-2 rounded" placeholder="ID del empleado" required>
+      </div>
+      <div class="mb-4">
+        <label class="block font-medium mb-2" for="empresa_id">Empresa ID</label>
+        <input type="number" id="empresa_id" [(ngModel)]="nuevaAsistencia.empresa_id" name="empresa_id" class="w-full border border-gray-300 px-3 py-2 rounded" placeholder="ID de la empresa" required>
+      </div>
+      <div class="mb-4">
+        <label class="block font-medium mb-2" for="fecha">Fecha</label>
+        <input type="datetime-local" id="fecha" [(ngModel)]="nuevaAsistencia.fecha" name="fecha" class="w-full border border-gray-300 px-3 py-2 rounded" required>
+      </div>
+      <div class="mb-4">
+        <label class="block font-medium mb-2" for="horario">Horario</label>
+        <select id="horario" [(ngModel)]="nuevaAsistencia.horario" name="horario" class="w-full border border-gray-300 px-3 py-2 rounded" required>
+          <option value="desayuno">Desayuno</option>
+          <option value="almuerzo">Almuerzo</option>
+          <option value="cena">Cena</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="block font-medium mb-2" for="metodo">Método</label>
+        <select id="metodo" [(ngModel)]="nuevaAsistencia.metodo" name="metodo" class="w-full border border-gray-300 px-3 py-2 rounded" required>
+          <option value="qr">QR</option>
+          <option value="barras">Barras</option>
+        </select>
+      </div>
+      <div class="flex justify-end space-x-4">
+        <button type="button" (click)="cerrarModalCrear()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 flex items-center">
+          <i class="fas fa-times mr-1"></i> Cancelar
+        </button>
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center">
+          <i class="fas fa-check mr-1"></i> Crear
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para Editar Asistencia -->
+<div *ngIf="mostrarModalEditar" class="fixed inset-0 flex items-center justify-center z-50">
+  <div class="fixed inset-0 bg-black opacity-50"></div>
+  <div class="bg-white p-6 rounded-md z-50 w-96">
+    <h3 class="text-xl font-semibold mb-4">Editar Asistencia</h3>
+    <form (ngSubmit)="confirmarEditarAsistencia()">
+      <div class="mb-4">
+        <label class="block font-medium mb-2" for="empleado_id_edit">Empleado ID</label>
+        <input type="number" id="empleado_id_edit" [(ngModel)]="asistenciaEditada.empleado_id" name="empleado_id_edit" class="w-full border border-gray-300 px-3 py-2 rounded" required>
+      </div>
+       <div class="mb-4">
+        <label class="block font-medium mb-2" for="empresa_id_edit">Empresa ID</label>
+        <input type="number" id="empresa_id_edit" [(ngModel)]="asistenciaEditada.empresa_id" name="empresa_id_edit" class="w-full border border-gray-300 px-3 py-2 rounded" placeholder="ID de la empresa" required>
+      </div>
+      <div class="mb-4">
+        <label class="block font-medium mb-2" for="fecha_edit">Fecha</label>
+        <input type="datetime-local" id="fecha_edit" [(ngModel)]="asistenciaEditada.fecha" name="fecha_edit" class="w-full border border-gray-300 px-3 py-2 rounded" required>
+      </div>
+      <div class="mb-4">
+        <label class="block font-medium mb-2" for="horario_edit">Horario</label>
+        <select id="horario_edit" [(ngModel)]="asistenciaEditada.horario" name="horario_edit" class="w-full border border-gray-300 px-3 py-2 rounded" required>
+          <option value="desayuno">Desayuno</option>
+          <option value="almuerzo">Almuerzo</option>
+          <option value="cena">Cena</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="block font-medium mb-2" for="metodo_edit">Método</label>
+        <select id="metodo_edit" [(ngModel)]="asistenciaEditada.metodo" name="metodo_edit" class="w-full border border-gray-300 px-3 py-2 rounded" required>
+          <option value="qr">QR</option>
+          <option value="barras">Barras</option>
+        </select>
+      </div>
+      <div class="flex justify-end space-x-4">
+        <button type="button" (click)="cerrarModalEditar()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 flex items-center">
+          <i class="fas fa-times mr-1"></i> Cancelar
+        </button>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center">
+          <i class="fas fa-check mr-1"></i> Guardar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para Eliminar Asistencia -->
+<div *ngIf="mostrarModalEliminar" class="fixed inset-0 flex items-center justify-center z-50">
+  <div class="fixed inset-0 bg-black opacity-50"></div>
+  <div class="bg-white p-6 rounded-md z-50 w-96">
+    <h3 class="text-xl font-semibold mb-4">Eliminar Asistencia</h3>
+    <p class="mb-4">¿Estás seguro que deseas eliminar la asistencia con ID "{{ asistenciaSeleccionada?.id }}"?</p>
+    <div class="flex justify-end space-x-4">
+      <button type="button" (click)="cerrarModalEliminar()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 flex items-center">
+        <i class="fas fa-times mr-1"></i> Cancelar
+      </button>
+      <button type="button" (click)="confirmarEliminarAsistencia()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex items-center">
+        <i class="fas fa-trash-alt mr-1"></i> Eliminar
+      </button>
+    </div>
+  </div>
+</div>

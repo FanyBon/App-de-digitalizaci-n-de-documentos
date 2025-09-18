@@ -1,0 +1,41 @@
+<div class="container mx-auto p-6 max-w-4xl">
+    <h1 class="text-2xl font-bold mb-6">Ajustes de la Cuenta</h1>
+  
+    <!-- Sección de Cambiar Contraseña -->
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+      <h2 class="text-lg font-semibold mb-4">Cambiar Contraseña</h2>
+      <form (submit)="updatePassword()">
+        <label class="block mb-2">
+          <span class="text-gray-700">Contraseña Actual</span>
+          <input type="password" [(ngModel)]="currentPassword" class="form-input mt-1 block w-full">
+        </label>
+  
+        <label class="block mb-2">
+          <span class="text-gray-700">Nueva Contraseña</span>
+          <input type="password" [(ngModel)]="newPassword" class="form-input mt-1 block w-full">
+        </label>
+  
+        <button type="submit" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Guardar Contraseña</button>
+      </form>
+    </div>
+  
+    <!-- Sección de Autenticación en Dos Pasos -->
+    <div class="bg-gray-100 rounded-lg p-6 mb-6">
+      <h2 class="text-lg font-semibold mb-4">Autenticación en Dos Pasos</h2>
+      <p class="text-gray-600 mb-4">Protege tu cuenta habilitando la autenticación en dos pasos.</p>
+      <button (click)="toggleTwoFactorAuth()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        {{ twoFactorEnabled ? 'Desactivar' : 'Activar' }}
+      </button>
+    </div>
+  
+    <!-- Sección de Notificaciones -->
+    <div class="bg-white shadow-md rounded-lg p-6">
+      <h2 class="text-lg font-semibold mb-4">Notificaciones</h2>
+      <p class="text-gray-600 mb-4">Configura las notificaciones de la cuenta.</p>
+      <label class="inline-flex items-center">
+        <input type="checkbox" [(ngModel)]="notificationsEnabled" class="form-checkbox">
+        <span class="ml-2">Recibir notificaciones por correo electrónico</span>
+      </label>
+    </div>
+  </div>
+  

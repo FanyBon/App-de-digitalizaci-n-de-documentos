@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "outDir": "./dist-electron",      // Se generará en: FRONTEND_WEB/src/electron/dist-electron
+    "rootDir": "./src",               // El código fuente está en: FRONTEND_WEB/src/electron/src
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "types": ["node"],
+    "sourceMap": true
+  },
+    "include": ["**/*.ts"],  // Modifica esta línea
+    
+  "exclude": [
+    "dist-electron"  // Se excluye la carpeta de salida, relativa a esta carpeta
+  ]
+}

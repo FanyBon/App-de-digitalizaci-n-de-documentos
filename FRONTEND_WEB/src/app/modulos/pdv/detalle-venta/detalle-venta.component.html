@@ -1,0 +1,80 @@
+<!-- Título y descripción -->
+<h2 class="text-2xl font-bold mb-2">
+  Informe de Detalle de Ventas
+</h2>
+
+<p class="mb-4 text-gray-700">
+  En este módulo puedes consultar todos los detalles de ventas realizados.
+  Se muestra información como producto, cantidad, precio unitario, subsidio aplicado,
+  método de pago y la fecha de registro.
+</p>
+
+<!-- Botón para ver Ventas PDV -->
+<!-- 🧩 Botones superiores -->
+<div class="mb-4 flex flex-wrap gap-4">
+  <button
+    class="px-4 py-2 bg-blue-600 text-white rounded"
+    (click)="toggleVentasPDV()"
+  >
+    {{ showVentasPDV ? 'Ocultar Ventas PDV' : 'Ver Ventas PDV' }}
+  </button>
+
+  <button
+    class="px-4 py-2 bg-green-600 text-white rounded"
+    (click)="toggleDetalles()"
+  >
+    {{ showDetalles ? 'Ocultar Detalles' : 'Ver Detalles' }}
+  </button>
+</div>
+
+<!-- Tabla de Ventas PDV, sólo si showVentasPDV=true -->
+<table
+  *ngIf="showVentasPDV"
+  class="min-w-full bg-white shadow rounded"
+>
+  <thead class="bg-gray-200">
+    <tr>
+      <th *ngFor="let col of columnasPDV" class="px-4 py-2 text-left">
+        {{ col }}
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let v of ventasPDV" class="border-t">
+      <td class="px-4 py-2">{{ v.id }}</td>
+      <td class="px-4 py-2">{{ v.empleado_id }}</td>
+      <td class="px-4 py-2">{{ v.usuario_id }}</td>
+      <td class="px-4 py-2">
+        {{ v.total_venta | currency:'MXN':'symbol':'1.2-2' }}
+      </td>
+      <td class="px-4 py-2">{{ v.subsidio_aplicado | currency:'MXN':'symbol' }}</td>
+      <td class="px-4 py-2">{{ v.monedero_id }}</td>
+      <td class="px-4 py-2">{{ v.metodo_pago_id }}</td>
+      <td class="px-4 py-2">{{ v.created_at | date:'short' }}</td>
+      <td class="px-4 py-2">{{ v.referencia }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ✅ Tabla de detalles solo si está visible -->
+<table *ngIf="showDetalles" class="min-w-full bg-white shadow rounded">
+  <thead class="bg-gray-200">
+    <tr>
+      <th *ngFor="let col of columnas" class="px-4 py-2 text-left">{{ col }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let d of detalles" class="border-t">
+      <td class="px-4 py-2">{{ d.id }}</td>
+      <td class="px-4 py-2">{{ d.venta_id }}</td>
+      <td class="px-4 py-2">{{ d.producto_id }}</td>
+      <td class="px-4 py-2">{{ d.cantidad }}</td>
+      <td class="px-4 py-2">
+        {{ d.precio_unitario | currency:'MXN':'symbol':'1.2-2' }}
+      </td>
+<td class="px-4 py-2">{{ d.subsidio_aplicado | currency:'MXN':'symbol':'1.2-2' }}</td>
+      <td class="px-4 py-2">{{ d.metodo_pago_id }}</td>
+      <td class="px-4 py-2">{{ d.created_at | date:'short' }}</td>
+    </tr>
+  </tbody>
+</table>

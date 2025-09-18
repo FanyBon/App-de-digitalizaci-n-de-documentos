@@ -1,0 +1,20 @@
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/app",
+    "types": [],
+    "baseUrl": "./",                     // Esto asegura que el proyecto use rutas absolutas desde la raíz
+    "paths": {
+      "src/*": ["src/*"],                 // Ruta para importar cualquier archivo desde src
+      "src/app/services/*": ["src/app/services/*"] // Ruta específica para la carpeta services
+    }
+  },
+  "files": [
+    "src/main.ts"
+  ],
+  "include": [
+    "src/**/*.d.ts"
+  ]
+}

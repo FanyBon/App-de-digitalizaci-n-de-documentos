@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "module": "commonjs",
+    "rootDir": ".",           
+    "outDir": "./dist",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "strict": true
+  },
+  "include": [
+    "server.ts",        // Incluye el archivo de arranque en la raíz
+    "src/**/*.ts"       // Incluye todos los archivos TypeScript dentro de src
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

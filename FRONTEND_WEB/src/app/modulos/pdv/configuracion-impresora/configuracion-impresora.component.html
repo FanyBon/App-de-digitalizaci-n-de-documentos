@@ -1,0 +1,22 @@
+<div class="p-4">
+  <h1 class="text-xl font-bold mb-4">Configuración de impresora</h1>
+
+  <label class="block mb-2 text-sm font-medium text-gray-700">Selecciona impresora:</label>
+  <select [(ngModel)]="selectedPrinter" class="mb-4 px-4 py-2 border rounded w-full">
+    <option *ngFor="let printer of printers" [value]="printer">{{ printer }}</option>
+  </select>
+
+  <button (click)="conectar()" class="bg-green-600 text-white px-4 py-2 rounded mr-2">
+    Conectar a QZ Tray
+  </button>
+
+  <button (click)="imprimir()" class="bg-blue-600 text-white px-4 py-2 rounded mr-2">
+    Imprimir ticket de prueba
+  </button>
+
+  <button (click)="imprimirEjemplo()" class="bg-purple-600 text-white px-4 py-2 rounded">
+    Imprimir ticket completo
+  </button>
+
+  <p class="mt-4 text-sm text-gray-600">Estado: {{ estado }}</p>
+</div>

@@ -1,0 +1,54 @@
+/* Fondo en degradado */
+.footer {
+    background: linear-gradient(to right, #1e3a8a, #000); /* Degradado de azul a negro */
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+/* Contenedor principal */
+.footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Imagen redonda */
+.footer-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%; /* Circular */
+    object-fit: cover;
+}
+
+/* Enlaces de políticas y contacto */
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+/* Estilo de enlace */
+.footer-link {
+    color: #d1d5db;
+    transition: color 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.footer-link:hover {
+    color: #f3f4f6; /* Cambia a un color más claro en hover */
+}
+
+/* Estilos adaptativos */
+@media (max-width: 640px) {
+    .footer-content {
+        flex-direction: column; /* Coloca imagen y texto en columna */
+    }
+
+    .footer-links {
+        flex-direction: column; /* Enlaces en columna para dispositivos pequeños */
+        gap: 0.75rem;
+    }
+}

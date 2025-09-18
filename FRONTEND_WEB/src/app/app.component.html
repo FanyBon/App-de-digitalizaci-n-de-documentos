@@ -1,0 +1,23 @@
+<div class="app-container flex flex-col h-screen">
+  <!-- Header -->
+  <div *ngIf="showMainLayout" class="header-container">
+    <app-header></app-header>
+  </div>
+
+  <!-- Contenedor principal con Sidebar y Área de Contenido -->
+  <div class="main-content-container flex flex-1">
+    <!-- Sidebar -->
+    <app-sidebar *ngIf="showMainLayout"></app-sidebar>
+
+    <!-- Área de Contenido Principal -->
+    <div [ngClass]="{'flex-1 p-6 bg-gray-100 overflow-y-auto': showMainLayout, 'w-full h-full': !showMainLayout}">
+      <!-- Aquí se cargan las rutas definidas en el router -->
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div *ngIf="showMainLayout" class="footer-container">
+    <app-footer></app-footer>
+  </div>
+</div>

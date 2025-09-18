@@ -1,0 +1,359 @@
+<!-- src/app/modulos/pdv/clientes/clientes.component.html -->
+<div class="container mx-auto p-4">
+  <!-- Título y descripción -->
+  <h1 class="text-2xl font-bold mb-2">Modulo de clientes</h1>
+  <p class="mb-4 text-gray-700">
+    En este módulo se pueden administrar y visualizar los datos de los clientes.
+  </p>
+
+  <!-- Contenedor de botones -->
+  <div class="mb-4 flex flex-wrap items-center gap-4">
+    <button (click)="loadClientes()"
+      class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none">
+      <i class="fas fa-users mr-2"></i> Ver clientes
+    </button>
+    <!-- Botón toggle: muestra "Ver tabla completa" o "Contraer tabla" -->
+    <button *ngIf="clientes.length > 0" (click)="toggleTableView()"
+      class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none">
+      <i [ngClass]="showFullTable ? 'fas fa-compress mr-2' : 'fas fa-expand mr-2'"></i>
+      {{ showFullTable ? 'Contraer tabla' : 'Ver tabla completa' }}
+    </button>
+
+    <button (click)="openModal()"
+      class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 focus:outline-none">
+      <i class="fas fa-sync-alt mr-2"></i> Recargar
+    </button>
+
+    <button (click)="abrirCrearClienteModal()"
+      class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 focus:outline-none">
+      <i class="fas fa-user-plus mr-2"></i> Añadir cliente
+    </button>
+
+    <!-- Nuevo botón: Añadir tarjeta -->
+  <button (click)="abrirBuscarEmpleadoParaMonedero()"
+      class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 focus:outline-none">
+      <i class="fas fa-credit-card mr-2"></i> Añadir tarjeta
+  </button>
+
+  </div>
+
+  <!-- Mensajes de carga o error -->
+  <div *ngIf="loading" class="mb-4 text-center text-gray-500">
+    Cargando datos...
+  </div>
+  <div *ngIf="error" class="mb-4 text-center text-red-500">
+    {{ error }}
+  </div>
+
+  <!-- Tabla de clientes -->
+  <div class="overflow-x-auto border rounded">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <!-- Encabezados con indicador de ordenamiento -->
+          <th (click)="toggleSort('id', 'number')"
+            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+            ID <i class="ml-1"
+              [ngClass]="sortColumn==='id' ? (sortDirection==='asc' ? 'fas fa-sort-up text-gray-700' : 'fas fa-sort-down text-gray-700') : 'fas fa-sort text-gray-400'"></i>
+          </th>
+          <th (click)="toggleSort('nombre', 'string')"
+            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+            Nombre <i class="ml-1"
+              [ngClass]="sortColumn==='nombre' ? (sortDirection==='asc' ? 'fas fa-sort-up text-gray-700' : 'fas fa-sort-down text-gray-700') : 'fas fa-sort text-gray-400'"></i>
+          </th>
+          <th (click)="toggleSort('cedula', 'string')"
+            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+            Cédula <i class="ml-1"
+              [ngClass]="sortColumn==='cedula' ? (sortDirection==='asc' ? 'fas fa-sort-up text-gray-700' : 'fas fa-sort-down text-gray-700') : 'fas fa-sort text-gray-400'"></i>
+          </th>
+          <th (click)="toggleSort('empresa_id', 'number')"
+            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+            Empresa <i class="ml-1"
+              [ngClass]="sortColumn==='empresa_id' ? (sortDirection==='asc' ? 'fas fa-sort-up text-gray-700' : 'fas fa-sort-down text-gray-700') : 'fas fa-sort text-gray-400'"></i>
+          </th>
+          <th (click)="toggleSort('activo', 'number')"
+            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+            Activo <i class="ml-1"
+              [ngClass]="sortColumn==='activo' ? (sortDirection==='asc' ? 'fas fa-sort-up text-gray-700' : 'fas fa-sort-down text-gray-700') : 'fas fa-sort text-gray-400'"></i>
+          </th>
+          <th (click)="toggleSort('monedero_id', 'number')"
+            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+            Monedero ID <i class="ml-1"
+              [ngClass]="sortColumn==='monedero_id' ? (sortDirection==='asc' ? 'fas fa-sort-up text-gray-700' : 'fas fa-sort-down text-gray-700') : 'fas fa-sort text-gray-400'"></i>
+          </th>
+          <!-- Columnas adicionales para vista completa -->
+          <th *ngIf="showFullTable" (click)="toggleSort('codigo_barras', 'string')"
+            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+            Código Barras <i class="ml-1"
+              [ngClass]="sortColumn==='codigo_barras' ? (sortDirection==='asc' ? 'fas fa-sort-up text-gray-700' : 'fas fa-sort-down text-gray-700') : 'fas fa-sort text-gray-400'"></i>
+          </th>
+          <th *ngIf="showFullTable" (click)="toggleSort('created_at', 'date')"
+            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+            Creado <i class="ml-1"
+              [ngClass]="sortColumn==='created_at' ? (sortDirection==='asc' ? 'fas fa-sort-up text-gray-700' : 'fas fa-sort-down text-gray-700') : 'fas fa-sort text-gray-400'"></i>
+          </th>
+          <th *ngIf="showFullTable" (click)="toggleSort('updated_at', 'date')"
+            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+            Actualizado <i class="ml-1"
+              [ngClass]="sortColumn==='updated_at' ? (sortDirection==='asc' ? 'fas fa-sort-up text-gray-700' : 'fas fa-sort-down text-gray-700') : 'fas fa-sort text-gray-400'"></i>
+          </th>
+          <th *ngIf="showFullTable" (click)="toggleSort('sincronizado', 'number')"
+            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+            Sincronizado <i class="ml-1"
+              [ngClass]="sortColumn==='sincronizado' ? (sortDirection==='asc' ? 'fas fa-sort-up text-gray-700' : 'fas fa-sort-down text-gray-700') : 'fas fa-sort text-gray-400'"></i>
+          </th>
+          <th *ngIf="showFullTable" (click)="toggleSort('codigo_qr', 'string')"
+            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+            Código QR <i class="ml-1"
+              [ngClass]="sortColumn==='codigo_qr' ? (sortDirection==='asc' ? 'fas fa-sort-up text-gray-700' : 'fas fa-sort-down text-gray-700') : 'fas fa-sort text-gray-400'"></i>
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <tr *ngFor="let cliente of clientes">
+          <td class="px-4 py-2 text-sm text-gray-500">{{ cliente.id }}</td>
+          <td class="px-4 py-2 text-sm text-gray-500">{{ cliente.nombre }}</td>
+          <td class="px-4 py-2 text-sm text-gray-500">{{ cliente.cedula }}</td>
+          <td class="px-4 py-2 text-sm text-gray-500">{{ cliente.empresa_id }}</td>
+          <td class="px-4 py-2 text-sm text-gray-500">{{ cliente.activo }}</td>
+          <td class="px-4 py-2 text-sm text-gray-500">{{ cliente.monedero_id }}</td>
+          <td *ngIf="showFullTable" class="px-4 py-2 text-sm text-gray-500">{{ cliente.codigo_barras }}</td>
+          <td *ngIf="showFullTable" class="px-4 py-2 text-sm text-gray-500">{{ cliente.created_at }}</td>
+          <td *ngIf="showFullTable" class="px-4 py-2 text-sm text-gray-500">{{ cliente.updated_at }}</td>
+          <td *ngIf="showFullTable" class="px-4 py-2 text-sm text-gray-500">{{ cliente.sincronizado }}</td>
+          <td *ngIf="showFullTable" class="px-4 py-2 text-sm text-gray-500">{{ cliente.codigo_qr }}</td>
+        </tr>
+        <!-- Fila para el caso de que no existan registros -->
+        <tr *ngIf="clientes.length === 0">
+          <td [attr.colspan]="showFullTable ? 11 : 6" class="px-4 py-2 text-center text-gray-500">
+            No hay registros
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Modal para búsqueda (se despliega al hacer clic en "Recargar") -->
+  <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50" *ngIf="showModal">
+    <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Buscar Empleado</h2>
+        <button (click)="closeModal()" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div>
+        <input type="text" [(ngModel)]="searchQuery"
+          placeholder="Buscar por nombre, cédula, código de barras o código QR" class="w-full p-2 border rounded mb-4">
+        <button (click)="searchEmpleado()"
+          class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none">
+          <i class="fas fa-search mr-2"></i> Buscar
+        </button>
+      </div>
+      <!-- Listado de resultados -->
+      <div *ngIf="searchResults && searchResults.length > 0" class="mt-4">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr>
+              <th class="px-4 py-2">Nombre</th>
+              <th class="px-4 py-2">Cédula</th>
+              <th class="px-4 py-2">Código de Barras</th>
+              <th class="px-4 py-2">Código QR</th>
+              <th class="px-4 py-2">Monedero ID</th>
+              <th class="px-4 py-2">Seleccionar</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let empleado of searchResults" class="hover:bg-gray-100">
+              <td class="px-4 py-2">{{ empleado.nombre }}</td>
+              <td class="px-4 py-2">{{ empleado.cedula }}</td>
+              <td class="px-4 py-2">{{ empleado.codigo_barras }}</td>
+              <td class="px-4 py-2">{{ empleado.codigo_qr }}</td>
+              <td class="px-4 py-2">{{ empleado.monedero_id }}</td>
+              <td class="px-4 py-2">
+                <button (click)="selectMonedero(empleado.monedero_id)"
+                  class="bg-green-500 text-white px-3 py-1 rounded">
+                  Seleccionar
+                </button>
+              </td>
+              <td class="px-4 py-2">
+                <button (click)="verSaldo(empleado.monedero_id)" class="bg-blue-500 text-white px-3 py-1 rounded">
+                  Ver saldo
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div *ngIf="searchResults && searchResults.length === 0" class="mt-4 text-center text-gray-500">
+        No se encontraron resultados.
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Modal de Recarga -->
+  <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50" *ngIf="showRecargaModal">
+    <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Realizar Recarga</h2>
+        <button (click)="cerrarRecargaModal()" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="mb-4">
+        <label class="block mb-2">Monto</label>
+        <input type="number" [(ngModel)]="montoRecarga" class="w-full p-2 border rounded">
+      </div>
+
+      <div class="mb-4">
+        <label class="block mb-2">Método de Pago</label>
+        <select [(ngModel)]="metodoPagoId" class="w-full p-2 border rounded">
+          <option *ngFor="let metodo of metodosPago" [value]="metodo.id">{{ metodo.nombre }}</option>
+        </select>
+      </div>
+
+      <button (click)="realizarRecarga()"
+        class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none">
+        Confirmar Recarga
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal para mostrar Saldo del Monedero -->
+  <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50" *ngIf="showSaldoModal">
+    <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Información del Monedero</h2>
+        <button (click)="cerrarSaldoModal()" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div>
+        <p><strong>ID:</strong> {{ currentMonedero?.id }}</p>
+        <p><strong>Empleado ID:</strong> {{ currentMonedero?.empleado_id }}</p>
+        <p><strong>Saldo Actual:</strong> {{ currentMonedero?.saldo_actual | currency }}</p>
+        <p><strong>Fecha de Creación:</strong> {{ currentMonedero?.fecha_creacion | date:'medium' }}</p>
+        <p><strong>Activo:</strong> {{ currentMonedero?.activo ? 'Sí' : 'No' }}</p>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Modal para crear un nuevo cliente -->
+  <div *ngIf="showCrearClienteModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Crear Cliente</h2>
+        <button (click)="cerrarCrearClienteModal()" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form (ngSubmit)="crearEmpleado()">
+        <div class="mb-4">
+          <label class="block mb-2">Nombre</label>
+          <input type="text" [(ngModel)]="newEmpleado.nombre" name="nombre" class="w-full p-2 border rounded" required>
+        </div>
+        <div class="mb-4">
+          <label class="block mb-2">Cédula</label>
+          <input type="text" [(ngModel)]="newEmpleado.cedula" name="cedula" class="w-full p-2 border rounded" required>
+        </div>
+        <div class="mb-4">
+          <label class="block mb-2">Empresa</label>
+          <select [(ngModel)]="newEmpleado.empresa_id" name="empresa_id" class="w-full p-2 border rounded" required>
+            <option value="">Seleccione una empresa</option>
+            <option *ngFor="let empresa of empresas" [value]="empresa.id">
+              {{ empresa.nombre }}
+            </option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block mb-2">Código de Barras</label>
+          <input type="text" [(ngModel)]="newEmpleado.codigo_barras" name="codigo_barras"
+            class="w-full p-2 border rounded">
+        </div>
+        <!-- Los campos "activo", "codigo_qr" y "monedero_id" se manejan en el backend -->
+        <div class="flex justify-end gap-4">
+          <button type="button" (click)="cerrarCrearClienteModal()"
+            class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 focus:outline-none">
+            Cancelar
+          </button>
+          <button type="submit"
+            class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 focus:outline-none">
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- Modal de éxito en la creación del empleado -->
+  <div *ngIf="mostrarModalSuccess" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Empleado Creado</h2>
+        <button (click)="cerrarModalSuccess()" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div>
+        <p>Se creó el usuario:</p>
+        <p><strong>Nombre:</strong> {{ empleadoCreado?.nombre }}</p>
+        <p><strong>Cédula:</strong> {{ empleadoCreado?.cedula }}</p>
+        <p><strong>Empresa ID:</strong> {{ empleadoCreado?.empresa_id }}</p>
+        <!-- Agrega más datos si lo requieres -->
+      </div>
+      <div class="flex justify-end mt-4">
+        <button (click)="crearTarjeta()"
+          class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none">
+          Crear tarjeta
+        </button>
+      </div>
+    </div>
+  </div>
+
+<!-- Modal para buscar empleado para asignar monedero -->
+<div *ngIf="showBuscarEmpleadoParaMonedero" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+  <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold">Buscar Empleado para Monedero</h2>
+      <button (click)="cerrarBuscarEmpleadoParaMonedero()" class="text-gray-500 hover:text-gray-700">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div>
+      <input type="text" [(ngModel)]="searchQueryMonedero" placeholder="Buscar empleado (nombre, cédula...)" class="w-full p-2 border rounded mb-4">
+      <button (click)="buscarEmpleadoParaMonedero()" class="bg-blue-500 text-white px-4 py-2 rounded">
+        <i class="fas fa-search mr-2"></i> Buscar
+      </button>
+    </div>
+    <div *ngIf="monederoSearchResults?.length">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead>
+          <tr>
+            <th class="px-4 py-2">Nombre</th>
+            <th class="px-4 py-2">Cédula</th>
+            <th class="px-4 py-2">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let empleado of monederoSearchResults" class="hover:bg-gray-100">
+            <td class="px-4 py-2">{{ empleado.nombre }}</td>
+            <td class="px-4 py-2">{{ empleado.cedula }}</td>
+            <td class="px-4 py-2">
+              <button (click)="seleccionarEmpleadoParaMonedero(empleado)" class="bg-green-500 text-white px-3 py-1 rounded">
+                Asignar tarjeta
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+
+</div>

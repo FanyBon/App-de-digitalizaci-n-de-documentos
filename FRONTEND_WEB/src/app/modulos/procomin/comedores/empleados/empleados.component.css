@@ -1,0 +1,95 @@
+@media print {
+    /* Oculta todo en la página */
+    body * {
+      display: none !important;
+    }
+    
+    /* Muestra solo el contenido que esté dentro de #printArea */
+    #printArea, #printArea * {
+      display: block !important;
+    }
+    
+    /* Posición fija y ancho para el área de impresión de 58mm (ideal para papel térmico) */
+    #printArea {
+      position: absolute !important;
+      top: 0;
+      left: 0;
+      width: 58mm !important;
+      margin: 0 auto;
+    }
+  }
+  .relative {
+    position: relative;
+  }
+  
+  .buscador-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    z-index: 10;
+  }
+  
+  .dropdown-list li {
+    padding: 8px;
+    cursor: pointer;
+  }
+  
+  .dropdown-list li:hover {
+    background: #f0f0f0;
+  }
+
+  .tarjetas-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+  
+  .tarjeta {
+    width: 250px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    background-color: white;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+  }
+  
+  .tarjeta-header {
+    font-size: 18px;
+    font-weight: bold;
+    color: #d32f2f;
+    margin-bottom: 10px;
+  }
+  
+  .tarjeta-info {
+    font-size: 14px;
+    text-align: left;
+    margin-bottom: 10px;
+  }
+  
+  .barcode-container, .qr-container {
+    margin-top: 10px;
+  }
+  
+  .tarjeta-footer {
+    font-size: 12px;
+    color: #555;
+    margin-top: 10px;
+  }
+  
+  

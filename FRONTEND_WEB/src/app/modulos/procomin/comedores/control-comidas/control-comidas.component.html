@@ -1,0 +1,195 @@
+<!-- src/app/modules/control_comidas/control-comidas/control-comidas.component.html -->
+<div class="control-comidas-container min-h-screen w-full p-8 bg-gray-100">
+
+  <!-- Título principal -->
+  <h1 class="text-3xl font-bold text-center">Control de Comidas</h1>
+  <h2 *ngIf="!showModal && selectedCompanyName" class="text-xl text-center mt-2">
+    {{ selectedCompanyName }}
+  </h2>
+
+  <!-- BLOQUE UNIFICADO: BARRAS / QR / CSV / CONTADOR -->
+  <div *ngIf="!showModal" class="my-6" (click)="focusBarcodeInput()">
+    <div class="flex flex-wrap justify-center gap-4 items-center bg-white p-4 rounded-lg shadow-md">
+      <!-- Búsqueda por código de barras -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <label for="barcodeInput" class="font-medium">Código de barras:</label>
+        <input 
+        #barcodeInputRef
+    id="barcodeInputRef"
+    type="text"
+    [(ngModel)]="barcodeInput"
+    (keydown.enter)="searchEmployeeByBarcode()"
+    (blur)="handleBlur()"
+    placeholder="Escanea o escribe el código de barras"
+    class="border px-4 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+  
+        />
+        <button (click)="searchEmployeeByBarcode()"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 flex items-center">
+          <i class="fas fa-search mr-2"></i> Buscar
+        </button>
+      </div>
+
+      <!-- Escaneo por QR -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="font-medium">Código QR:</span>
+        <button (click)="openQrScanner()"
+          class="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 flex items-center">
+          <i class="fas fa-camera mr-2"></i> Cámara
+        </button>
+      </div>
+
+      <!-- Exportar a CSV -->
+      <button (click)="exportarHoyACSV()"
+        class="bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900 flex items-center">
+        <i class="fas fa-file-csv mr-2"></i> Exportar CSV
+      </button>
+
+      
+
+      <!-- Contador de asistentes -->
+      <div class="flex items-center bg-gray-100 text-gray-800 px-4 py-2 rounded-lg border border-gray-300">
+        <i class="fas fa-users mr-2 text-blue-600"></i>
+        <span><strong>Personas hoy:</strong> {{ totalAsistenciasHoy }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Asistencias de Hoy -->
+  <div *ngIf="!showModal && todayAssistances.length > 0" class="mt-6 overflow-x-auto">
+    <h3 class="text-xl font-bold text-center mb-4">Asistencias de Hoy</h3>
+    <table class="min-w-full table-auto border-collapse border border-gray-300 text-sm">
+      <thead>
+        <tr class="bg-gray-200">
+          <th class="border px-4 py-2">ID</th>
+          <th class="border px-4 py-2">Empleado</th>
+          <th class="border px-4 py-2">Cedula</th>
+          <th class="border px-4 py-2">Fecha</th>
+          <th class="border px-4 py-2">Horario</th>
+          <th class="border px-4 py-2">Método</th>
+          <th class="border px-4 py-2">Empresa</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let a of todayAssistances" class="hover:bg-gray-50">
+          <td class="border px-4 py-2 text-center">{{ a.id }}</td>
+          <td class="border px-4 py-2 text-center">{{ a.empleado_nombre }}</td>
+          <td class="border px-4 py-2 text-center">{{ a.empleado_cedula }}</td>
+          <td class="border px-4 py-2">
+            {{ a.fecha | date: 'short' }}
+          </td>
+          <td class="border px-4 py-2 text-center">{{ a.horario }}</td>
+          <td class="border px-4 py-2 text-center">{{ a.metodo }}</td>
+          <td class="border px-4 py-2 text-center">{{ a.empresa_nombre }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mensaje si no hay asistencias hoy -->
+  <div *ngIf="!showModal && todayAssistances.length === 0" class="text-center mt-4">
+    <p>No hay asistencias registradas para hoy.</p>
+  </div>
+</div>
+
+<!-- Modal: Selección de Empresa -->
+<div *ngIf="showModal" class="fixed inset-0 flex items-center justify-center z-50">
+  <div class="fixed inset-0 bg-black opacity-50"></div>
+  <div class="bg-white p-6 rounded-md z-50 w-full max-w-xs mx-4">
+    <h3 class="text-xl font-semibold mb-4 text-center">
+      Selecciona una Empresa
+    </h3>
+    <select class="w-full border border-gray-300 px-3 py-2 rounded mb-4" [(ngModel)]="selectedCompanyId">
+      <option [ngValue]="null" disabled selected>
+        Seleccione una empresa
+      </option>
+      <option *ngFor="let company of companies" [ngValue]="company.id">
+        {{ company.nombre }}
+      </option>
+    </select>
+    <button (click)="onAcceptCompany()" class="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+      Aceptar
+    </button>
+  </div>
+</div>
+
+<!-- Modal: Confirmación de Asistencia -->
+<div *ngIf="showConfirmModal" class="fixed inset-0 flex items-center justify-center z-50">
+  <div class="fixed inset-0 bg-black opacity-50"></div>
+  <div class="bg-white p-6 rounded-md z-50 w-full max-w-xs mx-4">
+    <h3 class="text-xl font-semibold mb-4 text-center">
+      Confirmar Asistencia
+    </h3>
+    <div class="space-y-2">
+      <p>
+        <strong>Empleado:</strong>
+        {{ confirmAsistenciaData.empleado?.nombre }}
+      </p>
+      <p><strong>Fecha:</strong> {{ confirmAsistenciaData.fecha }}</p>
+      <p><strong>Horario:</strong> {{ confirmAsistenciaData.horario }}</p>
+      <p><strong>Método:</strong> {{ confirmAsistenciaData.metodo }}</p>
+      <p>
+        <strong>Empresa:</strong> {{ selectedCompanyName }}
+      </p>
+    </div>
+    <div class="mt-6 flex justify-end space-x-3">
+      <button (click)="cancelAssistance()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+        Cancelar
+      </button>
+      <button (click)="confirmAssistance()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Aceptar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Usuario No Encontrado -->
+<div
+  *ngIf="showUserNotFoundModal"
+  class="fixed inset-0 flex items-center justify-center z-50"
+>
+  <div class="fixed inset-0 bg-black opacity-50"></div>
+  <div
+    class="bg-white p-6 rounded-md z-50 w-full max-w-xs mx-4"
+  >
+    <h3 class="text-xl font-semibold mb-4 text-center">
+      Usuario No Encontrado
+    </h3>
+    <p class="text-center">
+      El usuario no está dado de alta o pertenece a otra empresa.
+    </p>
+    <div class="mt-6 flex justify-center">
+      <button
+        (click)="closeUserNotFoundModal()"
+        class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+      >
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Escáner QR -->
+<div *ngIf="showQrModal" class="fixed inset-0 flex items-center justify-center z-50">
+  <div class="absolute inset-0 bg-black opacity-50"></div>
+  <div class="bg-white rounded-lg p-6 z-50 w-full max-w-md mx-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold">Escanear código QR</h3>
+      <button (click)="closeQrScanner()" class="text-gray-600 hover:text-gray-800">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div id="qr-reader" class="w-full h-64 bg-gray-100 rounded-lg overflow-hidden"></div>
+  </div>
+</div>
+
+<!-- Modal: Límite de asistencias excedido -->
+<div *ngIf="showValidation" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+  <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm text-center">
+    <h4 class="text-lg font-semibold mb-4">Aviso</h4>
+    <p>{{ validationMessage }}</p>
+    <button (click)="showValidation = false" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+      Entendido
+    </button>
+  </div>
+</div>

@@ -1,0 +1,77 @@
+/* Fondo con animación de degradado en ondas suaves */
+.animated-gradient-bg {
+    background: linear-gradient(270deg, #000000, #1e3a8a); /* De negro a azul */
+    background-size: 200% 200%; /* Ajusta el tamaño para crear el efecto de onda */
+    animation: gradient-wave 10s ease infinite; /* Duración y suavidad de la animación */
+  }
+  
+  /* Animación de degradado ondulado */
+  @keyframes gradient-wave {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  /* Estilo del ícono en el campo de contraseña */
+  .relative .fas {
+    font-size: 1.25rem;
+    color: #4b5563; /* Ajusta el color del ícono */
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+  
+  /* Ajustes de estilo del formulario de inicio de sesión */
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  button {
+    background-color: #3b82f6;
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: #2563eb;
+  }
+  
+  /* Estilo del mensaje de error */
+  .bg-red-100 {
+    background-color: #fee2e2;
+  }
+  .border-red-400 {
+    border-color: #f87171;
+  }
+  .text-red-700 {
+    color: #b91c1c;
+  }
+  
+  /* Estilo del botón de "Solicitar acceso" */
+  .request-access {
+    color: white;
+    background-color: #3b82f6;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    display: inline-block;
+    text-align: center;
+  }
+  
+  .request-access:hover {
+    background-color: #2563eb;
+    text-decoration: none;
+  }  

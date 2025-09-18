@@ -1,0 +1,99 @@
+<div class="p-6 bg-white rounded-lg shadow">
+  <h2 class="text-2xl font-bold mb-2">CRUD-USUARIOS</h2>
+  <p class="text-gray-600 mb-4">Administra los usuarios del sistema, puedes agregar, editar y eliminar usuarios.</p>
+
+  <!-- Botón para mostrar el formulario -->
+  <button (click)="toggleFormulario()" class="bg-blue-600 text-white px-4 py-2 rounded flex items-center">
+    <i class="fas fa-user-plus mr-2"></i> 
+    {{ mostrarFormulario ? 'Ocultar Formulario' : 'Añadir Usuario' }}
+  </button>
+
+  <!-- Formulario de creación de usuario -->
+  <div *ngIf="mostrarFormulario" class="mt-4 p-4 border rounded-lg bg-gray-100">
+    <form (ngSubmit)="crearUsuario()" class="grid grid-cols-2 gap-4">
+      <div class="relative">
+        <i class="fas fa-user absolute left-3 top-3 text-gray-500"></i>
+        <input type="text" [(ngModel)]="usuario.username" name="username" placeholder="Username" class="pl-10 input">
+      </div>
+
+      <div class="relative">
+        <i class="fas fa-envelope absolute left-3 top-3 text-gray-500"></i>
+        <input type="email" [(ngModel)]="usuario.email" name="email" placeholder="Email" class="pl-10 input">
+      </div>
+
+      <div class="relative">
+        <i class="fas fa-lock absolute left-3 top-3 text-gray-500"></i>
+        <input type="password" [(ngModel)]="usuario.password" name="password" placeholder="Contraseña" class="pl-10 input">
+      </div>
+
+      <div class="relative">
+        <i class="fas fa-user-tag absolute left-3 top-3 text-gray-500"></i>
+        <input type="text" [(ngModel)]="usuario.role" name="role" placeholder="Rol" class="pl-10 input">
+      </div>
+
+      <div class="relative">
+        <i class="fas fa-id-card absolute left-3 top-3 text-gray-500"></i>
+        <input type="text" [(ngModel)]="usuario.name" name="name" placeholder="Nombre Completo" class="pl-10 input">
+      </div>
+
+      <div class="relative">
+        <i class="fas fa-phone absolute left-3 top-3 text-gray-500"></i>
+        <input type="text" [(ngModel)]="usuario.phone" name="phone" placeholder="Teléfono" class="pl-10 input">
+      </div>
+
+      <div class="relative">
+        <i class="fab fa-whatsapp absolute left-3 top-3 text-green-500"></i>
+        <input type="text" [(ngModel)]="usuario.whatsapp" name="whatsapp" placeholder="WhatsApp" class="pl-10 input">
+      </div>
+
+      <div class="relative">
+        <i class="fas fa-utensils absolute left-3 top-3 text-gray-500"></i>
+        <input type="text" [(ngModel)]="usuario.comedor" name="comedor" placeholder="Comedor" class="pl-10 input">
+      </div>
+
+      <div class="relative">
+        <i class="fas fa-briefcase absolute left-3 top-3 text-gray-500"></i>
+        <input type="text" [(ngModel)]="usuario.position" name="position" placeholder="Puesto" class="pl-10 input">
+      </div>
+
+      <div class="col-span-2 flex justify-end">
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded flex items-center">
+          <i class="fas fa-save mr-2"></i> Registrar Usuario
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Tabla de usuarios -->
+  <div class="mt-6">
+    <h3 class="text-xl font-bold mb-2">Lista de Usuarios</h3>
+    <table class="min-w-full bg-white border border-gray-300 shadow rounded-lg">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="p-2 border">ID</th>
+          <th class="p-2 border">Username</th>
+          <th class="p-2 border">Email</th>
+          <th class="p-2 border">Rol</th>
+          <th class="p-2 border">Nombre</th>
+          <th class="p-2 border">Teléfono</th>
+          <th class="p-2 border">WhatsApp</th>
+          <th class="p-2 border">Comedor</th>
+          <th class="p-2 border">Puesto</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of usuarios" class="hover:bg-gray-100">
+          <td class="p-2 border text-center">{{ user.id }}</td>
+          <td class="p-2 border">{{ user.username }}</td>
+          <td class="p-2 border">{{ user.email }}</td>
+          <td class="p-2 border">{{ user.role }}</td>
+          <td class="p-2 border">{{ user.name }}</td>
+          <td class="p-2 border">{{ user.phone }}</td>
+          <td class="p-2 border">{{ user.whatsapp }}</td>
+          <td class="p-2 border">{{ user.comedor }}</td>
+          <td class="p-2 border">{{ user.position }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

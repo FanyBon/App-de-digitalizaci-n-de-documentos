@@ -1,0 +1,80 @@
+/* Sidebar expandido */
+.sidebar-expanded {
+  width: 16rem;
+  height: 100%; /* Altura completa del contenedor entre header y footer */
+  background: linear-gradient(to bottom, #1e3a8a, #000); /* Degradado de azul oscuro a negro */
+  transition: width 0.3s ease;
+}
+
+/* Sidebar contraído */
+.sidebar-collapsed {
+  width: 4rem;
+  height: 100%; /* Altura completa del contenedor entre header y footer */
+  background: linear-gradient(to bottom, #1e3a8a, #000); /* Mismo degradado */
+  transition: width 0.3s ease;
+}
+
+/* Ajuste para el contenido interno del sidebar */
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Ocupa toda la altura */
+  background-color: red; /* Fondo rojo */
+}
+
+/* Encabezado del sidebar */
+.header {
+  display: flex;
+  align-items: center;
+  color: white;
+  cursor: pointer;
+}
+
+/* Estilos para los botones de menú y enlaces */
+.menu-item button, .menu-item a {
+  display: flex;
+  align-items: center;
+  color: white;
+  padding: 0.5rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.menu-item button:hover, .menu-item a:hover {
+  background-color: #4a5568; /* Fondo en hover */
+}
+
+/* Íconos y textos en el menú */
+.menu-item .fas {
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+}
+
+/* Submenús del sidebar */
+.menu-item .submenu a {
+  padding-left: 2rem; /* Espaciado para submenús */
+  color: #d1d5db;
+  text-decoration: none;
+}
+
+.menu-item .submenu a:hover {
+  color: #f3f4f6;
+}
+
+/* Estilo de botón de Cerrar Sesión al final del sidebar */
+.mt-auto {
+  margin-top: auto;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  color: white;
+  text-decoration: none;
+}
+
+a, button {
+  color: white;
+}
+
+a:hover, button:hover {
+  color: #f3f4f6;
+}

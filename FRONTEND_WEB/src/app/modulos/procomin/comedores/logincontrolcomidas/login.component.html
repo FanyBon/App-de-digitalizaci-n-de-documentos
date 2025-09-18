@@ -1,0 +1,66 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="flex justify-center mb-6">
+      <img src="assets/halucar.jpeg" alt="Logo" class="w-24 h-24 rounded-full shadow-lg" />
+    </div>
+    <!-- Título reutilizando la clase de login -->
+    <h2 class="login-title">CONTROL DE COMIDAS</h2>
+
+    <form (ngSubmit)="onSubmit()">
+      <!-- Campo de Nombre de Usuario -->
+      <div class="mb-4">
+        <label for="username" class="block text-gray-700 font-medium mb-2">
+          Nombre de Usuario
+        </label>
+        <input
+          type="text"
+          id="username"
+          [(ngModel)]="username"
+          name="username"
+          class="login-input"
+          placeholder="Ingrese su nombre de usuario"
+          required
+        />
+      </div>
+
+      <!-- Campo de Contraseña -->
+      <div class="mb-6">
+        <label for="password" class="block text-gray-700 font-medium mb-2">
+          Contraseña
+        </label>
+        <div class="relative">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            [(ngModel)]="password"
+            name="password"
+            class="login-input"
+            placeholder="Ingrese su contraseña"
+            required
+          />
+          <span
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500"
+            (click)="togglePassword()"
+          >
+            <i class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+          </span>
+        </div>
+      </div>
+
+      <!-- Mensaje de Error -->
+      <div *ngIf="errorMessage" class="login-error">
+        <strong>Error:</strong> {{ errorMessage }}
+      </div>
+
+      <!-- Botón de Enviar -->
+      <div class="mb-4">
+        <button
+          type="submit"
+          class="login-button"
+        >
+          Ingresar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,550 @@
+<div class="empleados-container min-h-screen w-full p-8 bg-gray-100">
+  <h1 class="text-3xl font-bold text-center mb-4">Gestión de Empleados</h1>
+  <p class="text-center mb-6 text-gray-600">Administración de empleados: crear, editar, eliminar y exportar.</p>
+
+  <!-- Bloque de buscador + botones de acción centrado -->
+  <div
+    class="mb-4 flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 max-w-2xl mx-auto">
+
+    <!-- Buscador (ancho ajustable via w-48, w-60, w-72…) -->
+    <div class="relative w-full sm:w-auto">
+      <input type="text" placeholder="Buscar..." [(ngModel)]="searchTerm" (ngModelChange)="filtrarTabla()"
+        (focus)="mostrarLista = true" (blur)="ocultarLista()"
+        class="w-48 sm:w-60 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
+      <ul *ngIf="filteredEmpleados.length && mostrarLista"
+        class="absolute w-48 sm:w-60 bg-white border border-gray-300 mt-1 max-h-48 overflow-auto z-10">
+        <li *ngFor="let empleado of filteredEmpleados" (click)="selectEmpleadoBusqueda(empleado)"
+          class="px-3 py-2 hover:bg-gray-200 cursor-pointer">
+          {{ empleado.nombre }} – {{ empleado.cedula }}
+        </li>
+      </ul>
+    </div>
+
+    <!-- Botones de acción solo iconos -->
+    <div class="flex space-x-2">
+      <button (click)="abrirModalCrear()" aria-label="Agregar empleado"
+        class="p-2 bg-green-600 text-white rounded hover:bg-green-700">
+        <i class="fas fa-plus"></i>
+      </button>
+
+      <button (click)="exportarExcel()" aria-label="Exportar Excel"
+        class="p-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        <i class="fas fa-file-excel"></i>
+      </button>
+
+      <button (click)="exportarCsv()" aria-label="Exportar CSV"
+        class="p-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+        <i class="fas fa-file-csv"></i>
+      </button>
+
+      <button (click)="toggleTablaCompleta()"
+        [title]="mostrarTodasColumnas ? 'Ver tabla simplificada' : 'Ver tabla completa'"
+        class="p-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+        <i class="fas" [ngClass]="{
+          'fa-eye': !mostrarTodasColumnas,
+          'fa-eye-slash': mostrarTodasColumnas
+        }"></i>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="mensajeError" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">
+    <strong>Error:</strong> {{ mensajeError }}
+  </div>
+
+  <!-- Contenedor responsivo con sombra y bordes redondeados -->
+<div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+
+  <!-- Scroll horizontal en móviles -->
+  <div class="overflow-x-auto">
+
+    <table class="min-w-full divide-y divide-gray-200 bg-white">
+      <thead class="bg-gray-50">
+        <tr>
+
+          <!-- ID (opcional) -->
+          <th
+            *ngIf="mostrarTodasColumnas"
+            (click)="sortData('id')"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+          >
+            ID <i [class]="getSortIcon('id')"></i>
+          </th>
+
+          <!-- Nombre -->
+          <th
+            (click)="sortData('nombre')"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+          >
+            Nombre <i [class]="getSortIcon('nombre')"></i>
+          </th>
+
+          <!-- Cédula -->
+          <th
+            (click)="sortData('cedula')"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+          >
+            Cédula <i [class]="getSortIcon('cedula')"></i>
+          </th>
+
+          <!-- Empresa (opcional) -->
+          <th
+            *ngIf="mostrarTodasColumnas"
+            (click)="sortData('empresa_id')"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+          >
+            Empresa <i [class]="getSortIcon('empresa_id')"></i>
+          </th>
+
+          <!-- Código de Barras -->
+          <th
+            (click)="sortData('codigo_barras')"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+          >
+            Código de Barras <i [class]="getSortIcon('codigo_barras')"></i>
+          </th>
+
+          <!-- Código QR -->
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Código QR
+          </th>
+
+          <!-- Activo -->
+          <th
+            (click)="sortData('activo')"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+          >
+            Activo <i [class]="getSortIcon('activo')"></i>
+          </th>
+
+          <!-- Fecha de Creación (opcional) -->
+          <th
+            *ngIf="mostrarTodasColumnas"
+            (click)="sortData('created_at')"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+          >
+            Creado <i [class]="getSortIcon('created_at')"></i>
+          </th>
+
+          <!-- Fecha de Actualización (opcional) -->
+          <th
+            *ngIf="mostrarTodasColumnas"
+            (click)="sortData('updated_at')"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+          >
+            Actualizado <i [class]="getSortIcon('updated_at')"></i>
+          </th>
+
+          <!-- Sincronizado (opcional) -->
+          <th
+            *ngIf="mostrarTodasColumnas"
+            (click)="sortData('sincronizado')"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+          >
+            Sincronizado <i [class]="getSortIcon('sincronizado')"></i>
+          </th>
+
+          <!-- Acciones -->
+          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Acciones
+          </th>
+        </tr>
+      </thead>
+
+      <tbody class="bg-white divide-y divide-gray-200">
+        <tr *ngFor="let empleado of filteredEmpleados" class="hover:bg-gray-50">
+
+          <td *ngIf="mostrarTodasColumnas" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            {{ empleado.id }}
+          </td>
+
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            {{ empleado.nombre }}
+          </td>
+
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            {{ empleado.cedula }}
+          </td>
+
+          <td *ngIf="mostrarTodasColumnas" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            {{ getNombreEmpresa(empleado.empresa_id) }}
+          </td>
+
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <canvas
+              [appBarcode]="empleado.codigo_barras"
+              [bcFormat]="'CODE128'"
+              [bcWidth]="2"
+              [bcHeight]="50"
+              [bcDisplayValue]="true"
+              class="mx-auto"
+            ></canvas>
+          </td>
+
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <qrcode *ngIf="empleado.codigo_qr" [qrdata]="empleado.codigo_qr" [width]="80"></qrcode>
+          </td>
+
+          <td class="px-6 py-4 whitespace-nowrap text-sm">
+            <span *ngIf="empleado.activo" class="text-green-600 font-bold">Sí</span>
+            <span *ngIf="!empleado.activo" class="text-red-600 font-bold">No</span>
+          </td>
+
+          <td *ngIf="mostrarTodasColumnas" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            {{ empleado.created_at | date:'short' }}
+          </td>
+
+          <td *ngIf="mostrarTodasColumnas" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            {{ empleado.updated_at | date:'short' }}
+          </td>
+
+          <td *ngIf="mostrarTodasColumnas" class="px-6 py-4 whitespace-nowrap text-sm">
+            <span *ngIf="empleado.sincronizado === 1" class="text-green-600 font-bold">Sí</span>
+            <span *ngIf="empleado.sincronizado === 0" class="text-red-600 font-bold">No</span>
+          </td>
+
+          <!-- Botones de acción solo con iconos -->
+<td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+  <div class="flex w-full justify-center space-x-4">
+    <button
+      (click)="abrirModalEditar(empleado)"
+      class="text-blue-600 hover:text-blue-900 focus:outline-none"
+      title="Editar"
+    >
+      <i class="fas fa-edit"></i>
+    </button>
+    <button
+      (click)="abrirModalEliminar(empleado)"
+      class="text-red-600 hover:text-red-900 focus:outline-none"
+      title="Eliminar"
+    >
+      <i class="fas fa-trash-alt"></i>
+    </button>
+  </div>
+</td>
+
+
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+  <!-- Modal para Crear Empleado -->
+<div *ngIf="mostrarModalCrear" class="fixed inset-0 flex items-center justify-center z-50">
+  <div class="fixed inset-0 bg-black opacity-50"></div>
+  <div class="bg-white p-6 rounded-md z-50 w-full max-w-md mx-4">
+    <h3 class="text-xl font-semibold mb-4 text-center">Crear Empleado</h3>
+    <form (ngSubmit)="confirmarCrearEmpleado()">
+
+      <!-- Nombre -->
+      <div class="mb-4">
+        <div class="relative">
+          <input
+            type="text"
+            id="nombre"
+            [(ngModel)]="nuevoEmpleado.nombre"
+            name="nombre"
+            class="w-full border border-gray-300 px-3 py-2 pl-10 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Nombre"
+            required
+          />
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fas fa-user text-gray-400"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cédula -->
+      <div class="mb-4">
+        <div class="relative">
+          <input
+            type="text"
+            id="cedula"
+            [(ngModel)]="nuevoEmpleado.cedula"
+            (ngModelChange)="onCedulaChange($event)"
+            name="cedula"
+            class="w-full border border-gray-300 px-3 py-2 pl-10 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Cédula"
+            required
+          />
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fas fa-id-card text-gray-400"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Checkbox: código igual a cédula -->
+      <div class="mb-4 flex items-center">
+        <input
+          type="checkbox"
+          id="mismoCodigo"
+          [(ngModel)]="useCedulaAsBarcode"
+          name="mismoCodigo"
+          (change)="onCheckboxChange()"
+          class="mr-2"
+        />
+        <label for="mismoCodigo" class="text-sm">
+          El código de barras es el mismo que la cédula
+        </label>
+      </div>
+
+      <!-- Empresa -->
+      <div class="mb-4">
+        <label class="block font-semibold mb-2" for="empresa_id">Empresa</label>
+        <select
+          id="empresa_id"
+          [(ngModel)]="nuevoEmpleado.empresa_id"
+          name="empresa_id"
+          class="w-full border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        >
+          <option value="" disabled selected>Seleccione una empresa</option>
+          <option *ngFor="let emp of empresas" [ngValue]="emp.id">{{ emp.nombre }}</option>
+        </select>
+      </div>
+
+      <!-- Código de Barras -->
+      <div class="mb-4">
+        <input
+          type="text"
+          id="codigo_barras"
+          [(ngModel)]="nuevoEmpleado.codigo_barras"
+          name="codigo_barras"
+          class="w-full border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Código de Barras"
+          [disabled]="useCedulaAsBarcode"
+        />
+      </div>
+
+      <!-- Comidas por día -->
+      <div class="mb-4">
+        <label class="block font-semibold mb-2" for="max_asistencias_por_dia">
+          Comidas por día
+        </label>
+        <input
+          type="number"
+          id="max_asistencias_por_dia"
+          [(ngModel)]="nuevoEmpleado.max_asistencias_por_dia"
+          name="max_asistencias_por_dia"
+          min="1"
+          class="w-full border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Cantidad de comidas permitidas"
+          required
+        />
+      </div>
+
+      <!-- Activo (solo lectura) -->
+      <div class="mb-4">
+        <label class="block font-semibold mb-2" for="activo">Usuario Activo</label>
+        <input
+          type="text"
+          id="activo"
+          class="w-full border border-gray-300 px-3 py-2 rounded bg-gray-100"
+          value="Sí"
+          disabled
+        />
+      </div>
+
+      <!-- Botones centrados -->
+      <div class="flex justify-center space-x-4">
+        <button
+          type="button"
+          (click)="cerrarModalCrear()"
+          class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex items-center"
+        >
+          <i class="fas fa-times mr-1"></i> Cancelar
+        </button>
+        <button
+          type="submit"
+          class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center"
+        >
+          <i class="fas fa-check mr-1"></i> Crear
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+  <!-- Modal para Editar Empleado -->
+  <div *ngIf="mostrarModalEditar" class="fixed inset-0 flex items-center justify-center z-50 px-4">
+    <div class="fixed inset-0 bg-black opacity-50"></div>
+    <div class="bg-white p-6 rounded-md z-50 w-full max-w-md mx-auto">
+      <h3 class="text-xl font-semibold mb-4 text-center">Editar Empleado</h3>
+
+      <form (ngSubmit)="confirmarEditarEmpleado()">
+        <!-- Nombre -->
+        <div class="mb-4">
+          <label for="nombre_edit" class="block font-medium mb-2">Nombre</label>
+          <div class="relative">
+            <input type="text" id="nombre_edit" name="nombre" [(ngModel)]="empleadoEditado.nombre"
+              class="w-full border px-3 py-2 pl-10 rounded focus:ring-2 focus:ring-blue-500" placeholder="Nombre"
+              required />
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-user text-gray-400"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cédula -->
+        <div class="mb-4">
+          <label for="cedula_edit" class="block font-medium mb-2">Cédula</label>
+          <div class="relative">
+            <input type="text" id="cedula_edit" name="cedula" [(ngModel)]="empleadoEditado.cedula"
+              class="w-full border px-3 py-2 pl-10 rounded focus:ring-2 focus:ring-blue-500" placeholder="Cédula"
+              required />
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-id-card text-gray-400"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empresa -->
+        <div class="mb-4">
+          <label for="empresa_id_edit" class="block font-medium mb-2">Empresa</label>
+          <select id="empresa_id_edit" name="empresa_id" [(ngModel)]="empleadoEditado.empresa_id"
+            class="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500" required>
+            <option [ngValue]="null" disabled>Seleccione una empresa</option>
+            <option *ngFor="let emp of empresas" [ngValue]="emp.id">{{ emp.nombre }}</option>
+          </select>
+        </div>
+
+        <!-- Código de Barras -->
+        <div class="mb-4">
+          <label for="codigo_barras_edit" class="block font-medium mb-2">Código de Barras</label>
+          <div class="relative">
+            <input type="text" id="codigo_barras_edit" name="codigo_barras" [(ngModel)]="empleadoEditado.codigo_barras"
+              class="w-full border px-3 py-2 pl-10 rounded focus:ring-2 focus:ring-blue-500"
+              placeholder="Código de Barras" />
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-barcode text-gray-400"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comidas por día -->
+        <div class="mb-4">
+          <label for="max_asistencias_por_dia" class="block font-medium mb-2">
+            Comidas por día
+          </label>
+          <input type="number" id="max_asistencias_por_dia" name="max_asistencias_por_dia"
+            [(ngModel)]="empleadoEditado.max_asistencias_por_dia" min="1"
+            class="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500"
+            placeholder="Cantidad de comidas permitidas" required />
+        </div>
+
+        <!-- Activo -->
+        <div class="mb-4">
+          <label for="activo_edit" class="block font-medium mb-2">Usuario activo</label>
+          <select id="activo_edit" name="activo" [(ngModel)]="empleadoEditado.activo"
+            class="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500" required>
+            <option [ngValue]="true">Sí</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </div>
+
+        <!-- Botones -->
+        <div class="flex justify-center space-x-4">
+          <button type="button" (click)="cerrarModalEditar()"
+            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex items-center">
+            <i class="fas fa-times mr-1"></i> Cancelar
+          </button>
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center">
+            <i class="fas fa-check mr-1"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal para Eliminar Empleado -->
+  <div *ngIf="mostrarModalEliminar" class="fixed inset-0 flex items-center justify-center z-50 px-4">
+    <div class="fixed inset-0 bg-black opacity-50"></div>
+    <!-- Contenedor responsivo -->
+    <div class="bg-white p-6 rounded-md z-50 w-full max-w-md mx-auto">
+      <!-- Pregunta con el nombre del empleado -->
+      <p class="text-xl font-semibold mb-2 text-center">
+        ¿Estás seguro que quieres eliminar al empleado "{{ empleadoSeleccionado?.nombre }}"?
+      </p>
+      <!-- Mensaje de alerta -->
+      <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+        <p class="text-sm">
+          Este cambio es irreversible y solo puede ser realizado por un administrador, desarrollador o personal de
+          sistemas.
+        </p>
+      </div>
+      <!-- Botones centrados -->
+      <div class="flex justify-center space-x-4">
+        <button type="button" (click)="cerrarModalEliminar()"
+          class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 flex items-center">
+          <i class="fas fa-times mr-1"></i> Cancelar
+        </button>
+        <button type="button" (click)="confirmarEliminarEmpleado()"
+          class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex items-center">
+          <i class="fas fa-trash-alt mr-1"></i> Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de impresión de QR -->
+  <div *ngIf="showPrintModal"
+    class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 no-print">
+    <div id="printArea" class="bg-white p-6 rounded-md z-50 w-96">
+      <!-- Títulos y datos organizados en bloques -->
+      <div class="text-center">
+        <h3 class="text-2xl font-bold mb-4">Procomin</h3>
+
+        <div class="mb-3">
+          <p class="font-semibold">Empleado:</p>
+          <p>{{ printData?.nombre }}</p>
+        </div>
+
+        <div class="mb-3">
+          <p class="font-semibold">Cédula:</p>
+          <p>{{ printData?.cedula }}</p>
+        </div>
+
+        <div class="mb-3">
+          <p class="font-semibold">Empresa:</p>
+          <p>{{ printData?.empresa_id }}</p>
+        </div>
+
+        <div class="mb-3">
+          <p class="font-semibold">Código de Barras:</p>
+          <div class="flex justify-center my-2">
+            <canvas [appBarcode]="printData?.codigo_barras" [bcFormat]="'CODE128'" [bcWidth]="2" [bcHeight]="50"
+              [bcDisplayValue]="true">
+            </canvas>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <p class="font-semibold">Código QR:</p>
+          <div class="qr-container relative flex justify-center my-2">
+            <qrcode *ngIf="printData?.codigo_qr" [qrdata]="printData.codigo_qr" [width]="150">
+            </qrcode>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <p class="font-semibold">Fecha y hora:</p>
+          <p>{{ printData?.fecha_impresion | date:'short' }}</p>
+        </div>
+      </div>
+
+      <!-- Botones que se mostrarán en pantalla pero se ocultarán en impresión -->
+      <div class="mt-4 flex justify-end space-x-2 no-print">
+        <button (click)="cancelarImpresion()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+          Cancelar
+        </button>
+        <button (click)="imprimirQR()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          Imprimir
+        </button>
+      </div>
+    </div>
+  </div>

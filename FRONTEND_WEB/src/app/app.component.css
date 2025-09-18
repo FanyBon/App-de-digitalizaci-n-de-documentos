@@ -1,0 +1,35 @@
+/* Contenedor principal que ocupa toda la pantalla */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Ocupa el 100% de la altura de la pantalla */
+}
+
+/* Header siempre en la parte superior */
+.header-container {
+  flex-shrink: 0; /* Evita que el header cambie de tamaño */
+  background-color: #2d3748; /* Color de fondo opcional para el header */
+}
+
+/* Contenedor principal entre header y footer */
+.main-content-container {
+  display: flex;
+  flex: 1; /* Se expande para ocupar el espacio restante entre header y footer */
+}
+
+/* Sidebar ocupa todo el espacio disponible en altura dentro del main-content-container */
+.sidebar-container {
+  height: 100%;
+}
+
+/* Contenedor de contenido principal */
+.content-container {
+  background-color: #f7fafc;
+  overflow-y: auto;
+}
+
+/* Footer siempre en la parte inferior */
+.footer-container {
+  flex-shrink: 0; /* Evita que el footer cambie de tamaño */
+  background-color: #2d3748; /* Color de fondo opcional para el footer */
+}

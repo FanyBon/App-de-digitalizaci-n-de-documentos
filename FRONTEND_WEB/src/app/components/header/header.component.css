@@ -1,0 +1,22 @@
+/* Estilo de la insignia de notificación */
+.notification-badge {
+  background-color: #ff0000;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 0.25rem 0.5rem;
+  border-radius: 50%;
+  position: absolute;
+  top: -5px;
+  right: -5px;
+}
+
+/* Estilo de fondo del modal de confirmación */
+.fixed {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.dropdown-menu {
+  background-color: #ffffff;
+  min-width: 150px;
+}
