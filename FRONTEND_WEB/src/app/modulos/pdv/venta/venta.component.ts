@@ -10,17 +10,18 @@ import { MonederosService } from 'src/app/services/recargas/monederos.service';
 import { TransaccionesService } from '../../../services/ventas/transacciones.service';
 import { SubsidiosService } from '../../../services/ventas/subsidios.service';
 import { MetodosPagoService } from '../../../services/recargas/metodos-pago.service';
+import { PrinterService } from 'src/app/services/printer/printer.service';
 
-/* Interfaces para la identificación del producto */
+//Interfaces para la identificación del producto
 interface CartItem extends Producto {
   cantidad: number;
 }
-/* Interfaces para la identificación del empleado y su monedero */
+//Interfaces para la identificación del empleado y su monedero
 interface Monedero {
   id: number;
   saldo: number;
 }
-/* Interfaces para la identificación del empleado */
+// Interfaces para la identificación del empleado 
 interface Empleado {
   id: number;
   nombre: string;
@@ -37,43 +38,59 @@ interface Empleado {
   styleUrls: ['./venta.component.css']
 })
 export class VentaComponent implements OnInit {
-  // Variables de búsqueda y productos
-  searchTerm: string = '';
-  // Productos tomados desde el backend
-  products: Producto[] = [];
-  // Carrito de la venta
-  cart: CartItem[] = [];
-  // Estados para controlar los modales
-  showSaleTypeModal: boolean = false;
+
+  searchTerm: string = ''; //Variables de búsqueda y productos
+  products: Producto[] = []; //Productos tomados desde el backend
+  cart: CartItem[] = []; //Carrito de la venta
+  showSaleTypeModal: boolean = false; //Estados para controlar los modales
   showScanModal: boolean = false;
   showTransactionSummaryModal: boolean = false;
   isVentaMonedero: boolean = false;
-  // Variable para el código escaneado
-  scanCode: string = '';
-  // Datos del empleado (resultado de la búsqueda)
-  empleado: Empleado | null = null;
-  // Variables para el resumen de la transacción
+  scanCode: string = ''; //Variable para el código escaneado
+  empleado: Empleado | null = null; //Datos del empleado (resultado de la búsqueda)
+  //Variables para el resumen de la transacción
   transactionTotal: number = 0;  // Suma total de productos sin descuento
   subsidioTotal: number = 0;     // Total del subsidio aplicado
   netTotal: number = 0;          // Total a pagar luego del subsidio
-  // Lista de familias (categorías)
-  familias: FamiliaProducto[] = [];
-  // Almacena la familia seleccionada (null = sin filtro, es decir, "Todos")
-  selectedFamily: number | null = null;
-  // Propiedades para la venta normal con método de pago
+  familias: FamiliaProducto[] = []; // Lista de familias (categorías)
+  selectedFamily: number | null = null; // Almacena la familia seleccionada (null = sin filtro, es decir, "Todos")
+  //Propiedades para la venta normal con método de pago
   showPaymentMethodModal: boolean = false;
   metodosPago: any[] = [];
   selectedMetodoPago: any = null;
   montoRecibido: number = 0; // Solo para pago en efectivo
 
-  constructor(  // Inyectamos los diferetes servicio que vamos a usar
+  // Helpers seguros y cálculo de subsidio
+  private parseNumber(v: any, fallback = 0): number {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  private calcularDescuento(subsidio: any, precioUnitario: number, cantidad: number): number {
+    // Soporta subsidio por porcentaje o monto fijo por unidad
+    if (!subsidio) return 0;
+    const tipo = (subsidio.tipo ?? '').toString().toLowerCase();
+    if (tipo === 'porcentaje' || subsidio.porcentaje != null) {
+      const porcentaje = parseFloat(String(subsidio.porcentaje ?? '0')) / 100;
+      return +(precioUnitario * cantidad * porcentaje).toFixed(2);
+    }
+    if (tipo === 'fijo' || subsidio.monto_fijo != null) {
+      const montoFijo = parseFloat(String(subsidio.monto_fijo ?? '0'));
+      return +(montoFijo * cantidad).toFixed(2);
+    }
+    return 0;
+  }
+
+  // Inyectamos los diferetes servicio que vamos a usar
+  constructor(
     private productosService: ProductosService,
     private familiaService: FamiliaProductoService,
     private empleadoService: EmpleadosService,
     private monederosService: MonederosService,
     private transaccionesService: TransaccionesService,
     private subsidiosService: SubsidiosService,
-    private metodosPagoService: MetodosPagoService
+    private metodosPagoService: MetodosPagoService,
+    private printerService: PrinterService
   ) { }
 
   ngOnInit(): void {
@@ -81,7 +98,7 @@ export class VentaComponent implements OnInit {
     this.obtenerFamilias();
   }
 
-  /** Obtiene productos desde el backend */
+  // Obtiene productos desde el backend
   obtenerProductos(): void {
     this.productosService.getProductos().subscribe({
       next: (productos: Producto[]) => {
@@ -92,7 +109,7 @@ export class VentaComponent implements OnInit {
       }
     });
   }
-  
+
   /** Obtiene las familias (categorías) desde el backend */
   obtenerFamilias(): void {
     this.familiaService.getFamiliasProductos().subscribe({
@@ -104,7 +121,7 @@ export class VentaComponent implements OnInit {
       }
     });
   }
-  
+
   /** Filtra los productos según la búsqueda y la familia seleccionada */
   filteredProducts(): Producto[] {
     let filtered = this.products.filter(product =>
@@ -115,12 +132,12 @@ export class VentaComponent implements OnInit {
     }
     return filtered;
   }
-  
+
   /** Selecciona una familia para filtrar los productos */
   selectFamily(familyId: number | null): void {
     this.selectedFamily = familyId;
   }
-  
+
   // Agregar un producto al carrito
   addToCart(product: Producto): void {
     // Si el producto ya existe en el carrito, aumentar la cantidad, de lo contrario agregarlo con cantidad 1
@@ -178,25 +195,31 @@ export class VentaComponent implements OnInit {
     this.selectedMetodoPago = null;
   }
 
+
+
+
   chooseVentaPorMonedero(): void {
+    console.log('chooseVentaPorMonedero invoked');
     this.showPaymentMethodModal = false;
     this.isVentaMonedero = true;
     this.showScanModal = true;
     this.showSaleTypeModal = false;
+    this.selectedMetodoPago = null;
+    
     console.log("Flujo de Ventas por Monedero iniciado");
-  // Consulta y asigna dinámicamente el método de pago MONEDERO (por ejemplo, con código "monedero")
-  this.metodosPagoService.listarMetodosPago().subscribe({
-    next: (metodos: any[]) => {
-      const metodoMonedero = metodos.find(m => m.codigo?.toLowerCase() === 'monedero');
-      if (metodoMonedero) {
-        this.selectedMetodoPago = metodoMonedero;
-        console.log("Método de pago asignado automáticamente:", this.selectedMetodoPago);
-      } else {
-        console.warn("No se encontró el método de pago MONEDERO.");
-      }
-    },
-    error: (err) => console.error("Error al obtener métodos de pago:", err)
-  });
+    // Consulta y asigna dinámicamente el método de pago MONEDERO (por ejemplo, con código "monedero")
+    this.metodosPagoService.listarMetodosPago().subscribe({
+      next: (metodos: any[]) => {
+        const metodoMonedero = metodos.find(m => m.codigo?.toLowerCase() === 'monedero');
+        if (metodoMonedero) {
+          this.selectedMetodoPago = metodoMonedero;
+          console.log("Método de pago asignado automáticamente:", this.selectedMetodoPago);
+        } else {
+          console.warn("No se encontró el método de pago MONEDERO.");
+        }
+      },
+      error: (err) => console.error("Error al obtener métodos de pago:", err)
+    });
   }
 
 
@@ -239,7 +262,6 @@ export class VentaComponent implements OnInit {
   }
 
   calculateTransaction(): void {
-    // Si el carrito está vacío, asignamos ceros y salimos
     if (this.cart.length === 0) {
       this.transactionTotal = 0;
       this.subsidioTotal = 0;
@@ -248,49 +270,47 @@ export class VentaComponent implements OnInit {
     }
 
     const observables = this.cart.map(item => {
-      // Si existe subsidio_id, consultamos el subsidio y calculamos el descuento
       if (item.subsidio_id) {
         return this.subsidiosService.obtenerSubsidio(item.subsidio_id).pipe(
           map((subsidio: any) => {
-            const porcentaje = parseFloat(subsidio.porcentaje.toString()) / 100;  // Ej.: "30.00" -> 0.3
-            const price = parseFloat(item.precio_venta.toString());
-            const discount = price * porcentaje * item.cantidad;
+            const price = this.parseNumber(item.precio_venta);
+            const cantidad = this.parseNumber(item.cantidad, 1);
+            const discount = this.calcularDescuento(subsidio, price, cantidad);
             return { item, discount };
           })
         );
       } else {
-        // Si no tiene subsidio, devolvemos un observable que emite un objeto con descuento 0.
         return of({ item, discount: 0 });
       }
     });
 
-    // Esperamos a que se resuelvan todas las consultas de subsidios
     forkJoin(observables).subscribe(results => {
       let totalSubsidio = 0;
       let netTotal = 0;
       results.forEach(({ item, discount }) => {
         totalSubsidio += discount;
-        // Suma neta: se descuenta el descuento (subsidio) de la suma del precio * cantidad
-        netTotal += (parseFloat(item.precio_venta.toString()) * item.cantidad) - discount;
+        const precioNum = this.parseNumber(item.precio_venta);
+        const cantidadNum = this.parseNumber(item.cantidad, 1);
+        netTotal += (precioNum * cantidadNum) - discount;
       });
 
-      // Si consideramos que "transactionTotal" es el total de productos sin descontar subsidios,
-      // podrías calcularlo de la siguiente forma:
       const totalBruto = netTotal + totalSubsidio;
-
-      // Asignamos los totales a las variables vinculadas a la vista
-      this.transactionTotal = totalBruto;
-      this.subsidioTotal = totalSubsidio;
-      this.netTotal = netTotal;
+      this.transactionTotal = +totalBruto.toFixed(2);
+      this.subsidioTotal = +totalSubsidio.toFixed(2);
+      this.netTotal = +netTotal.toFixed(2);
 
       console.log("Totales calculados:", this.transactionTotal, this.subsidioTotal, this.netTotal);
     });
   }
 
+
   /** Confirma el pago por monedero, validando si el saldo es suficiente */
   confirmMonederoPayment(): void {
-    if (!this.empleado || !this.empleado.monedero) return;
-    if (this.empleado.monedero.saldo < this.netTotal) {
+    if (!this.empleado || !this.empleado.monedero) {
+      console.error('Empleado o monedero faltante');
+      return;
+    }
+    if (this.parseNumber(this.empleado.monedero.saldo) < this.netTotal) {
       console.log('Saldo insuficiente en el monedero');
       return;
     }
@@ -302,57 +322,155 @@ export class VentaComponent implements OnInit {
       return;
     }
 
+    // Materializar referencias para que TS sepa que no son null/undefined
+    const empleadoSeleccionado = this.empleado!;
+    const monederoSeleccionado = empleadoSeleccionado.monedero!;
+
     const detailObservables = this.cart.map(item => {
       if (item.subsidio_id) {
         return this.subsidiosService.obtenerSubsidio(item.subsidio_id).pipe(
           map((subsidio: any) => {
-            const porcentaje = parseFloat(subsidio.porcentaje.toString()) / 100;
-            const discount = parseFloat(item.precio_venta.toString()) * porcentaje * item.cantidad;
+            const precio = this.parseNumber(item.precio_venta);
+            const cantidad = this.parseNumber(item.cantidad, 1);
+            const discount = this.calcularDescuento(subsidio, precio, cantidad);
             return {
-              producto_id: item.id,
-              cantidad: item.cantidad,
-              precio_unitario: parseFloat(item.precio_venta.toString()),
-              subsidio_aplicado: parseFloat(discount.toFixed(2))
+              producto_id: Number(item.id),
+              cantidad,
+              precio_unitario: Number(precio.toFixed(2)),
+              subsidio_aplicado: Number(discount.toFixed(2))
             };
           })
         );
       } else {
+        const precio = this.parseNumber(item.precio_venta);
         return of({
-          producto_id: item.id,
-          cantidad: item.cantidad,
-          precio_unitario: parseFloat(item.precio_venta.toString()),
+          producto_id: Number(item.id),
+          cantidad: this.parseNumber(item.cantidad, 1),
+          precio_unitario: Number(precio.toFixed(2)),
           subsidio_aplicado: 0.00
         });
       }
     });
 
     forkJoin(detailObservables).subscribe((details: any[]) => {
+      if (!Array.isArray(details) || details.length === 0) {
+        console.error('Detalles vacíos al construir payload por monedero');
+        return;
+      }
+
+      const DEFAULT_IMPUESTO_ID = 1;
+      const impuestoFromItems = this.cart.map(i => (i as any).impuesto_id).find(v => v != null);
+      const impuesto_id = (this as any).selectedTaxId ?? impuestoFromItems ?? DEFAULT_IMPUESTO_ID;
+
       const payload = {
         saleData: {
-          empleado_id: this.empleado!.id,
+          empleado_id: Number(empleadoSeleccionado.id),
           usuario_id: user_id,
-          total_venta: this.netTotal,
-          subsidio_aplicado: this.subsidioTotal,
+          total_venta: Number(this.netTotal) || 0,
+          subsidio_aplicado: Number(this.subsidioTotal) || 0,
           tipo_venta: "pdv",
-          monedero_id: this.empleado!.monedero!.id,
-          // En este flujo, use el método de pago seleccionado (que ahora debe contener la info de monedero)
-          metodo_pago_id: this.selectedMetodoPago ? this.selectedMetodoPago.id : null
-
+          monedero_id: Number(monederoSeleccionado.id),
+          metodo_pago_id: Number(this.selectedMetodoPago?.id ?? 4),
+          impuesto_id
         },
         details: details
       };
 
       console.log("Payload enviado:", payload);
       this.transaccionesService.procesarTransaccion(payload).subscribe({
-        next: (response: any) => {
-          console.log('Transacción procesada:', response);
+        next: async (response: any) => {
+          // Logs diagnósticos
+          console.log('DEBUG_PRINT: next handler ENTER - response:', response);
+          console.log('DEBUG_PRINT: this.cart:', JSON.parse(JSON.stringify(this.cart)));
+          console.log('DEBUG_PRINT: selectedMetodoPago:', this.selectedMetodoPago);
+          console.log('DEBUG_PRINT: transactionTotal/subsidio/net:', this.transactionTotal, this.subsidioTotal, this.netTotal);
+
+          alert(`Venta registrada con ${this.selectedMetodoPago?.nombre ?? 'método'}`);
+
+          // Determinar si es venta por monedero
+          const esMonedero = !!this.isVentaMonedero || (this.selectedMetodoPago?.codigo?.toLowerCase() === 'monedero');
+
+          // Preparar datos del receipt (comunes)
+          const itemsForReceipt = this.cart.map(it => ({
+            nombre: it.nombre,
+            cantidad: Number(it.cantidad || 0),
+            precio_unitario: Number(it.precio_venta || 0),
+            subtotal: Number(((it.precio_venta || 0) * (it.cantidad || 0)).toFixed(2)),
+            subsidio_aplicado: Number((it as any).subsidio_aplicado ?? 0)
+          }));
+
+          // Datos específicos de monedero
+          let monederoInfo: { saldo_anterior: number, saldo_final: number } | undefined = undefined;
+          if (esMonedero && this.empleado?.monedero) {
+            const saldoAnterior = Number(this.empleado.monedero.saldo ?? 0);
+            const saldoFinal = Number((saldoAnterior - this.netTotal).toFixed(2));
+            monederoInfo = { saldo_anterior: saldoAnterior, saldo_final: saldoFinal };
+          }
+
+          // Construir objeto receipt
+          const receipt = {
+            tipo: esMonedero ? 'monedero' as const : 'normal' as const,
+            venta: {
+              venta_id: response?.venta_id,
+              referencia: response?.referencia,
+              usuario_nombre: localStorage.getItem('user_name') || undefined,
+              empleado_nombre: this.empleado?.nombre ?? 'Cajero',
+              fecha: new Date().toLocaleString(),
+              items: itemsForReceipt,
+              total_bruto: Number(this.transactionTotal || 0),
+              total_subsidio: Number(this.subsidioTotal || 0),
+              total_neto: Number(this.netTotal || 0),
+              metodo_pago: this.selectedMetodoPago?.nombre
+            },
+            monedero: monederoInfo
+          };
+
+          // Intentar imprimir (no bloquear el flujo si falla)
+          try {
+            const selectedPrinter = localStorage.getItem('selected_printer') || '';
+            console.log('DEBUG_PRINT: attempting print on printer:', selectedPrinter);
+            console.log('DEBUG_PRINT: selectedPrinter before print:', selectedPrinter);
+            console.log('DEBUG_PRINT: receipt.items count:', receipt.venta.items.length);
+
+            if (!selectedPrinter) {
+              console.warn('DEBUG_PRINT: No selected printer, skipping print');
+            } else {
+              try {
+                await this.printerService.printReceipt(selectedPrinter, receipt);
+                console.log('DEBUG_PRINT: printReceipt resolved (first attempt)');
+              } catch (err) {
+                console.error('DEBUG_PRINT: printReceipt error (first attempt):', err);
+                // reintento con reconexión
+                try {
+                  await this.printerService.connect();
+                  await this.printerService.printReceipt(selectedPrinter, receipt);
+                  console.log('DEBUG_PRINT: printReceipt resolved (after reconnect)');
+                } catch (err2) {
+                  console.error('DEBUG_PRINT: print failed after reconnect:', err2);
+                }
+              }
+            }
+          } catch (e) {
+            console.error('DEBUG_PRINT: unexpected error while printing:', e);
+          }
+
+          // Si fue monedero, actualizar saldo local en UI
+          if (esMonedero && this.empleado && this.empleado.monedero && receipt.monedero) {
+            this.empleado.monedero.saldo = receipt.monedero.saldo_final;
+          }
+
+          // Limpieza y cierre (solo después de intentar imprimir)
           this.cart = [];
+          // Si era monedero, dejamos empleado null; si quieres mantener empleado para otro uso, ajusta aquí
           this.empleado = null;
           this.transactionTotal = 0;
           this.subsidioTotal = 0;
           this.netTotal = 0;
           this.closeModals();
         },
+
+
+
         error: (err: any) => console.error('Error procesando la transacción:', err)
       });
     });
@@ -361,17 +479,27 @@ export class VentaComponent implements OnInit {
 
 
 
+
+
+
   /** Muestra el modal para venta normal y carga los métodos de pago desde el servicio */
   processVentaNormal(): void {
-    console.log('Procesando venta normal');
-    this.metodosPagoService.listarMetodosPago().subscribe({
-      next: (response) => {
-        this.metodosPago = response;
-        this.showPaymentMethodModal = true;
-      },
-      error: (err) => console.error('Error obteniendo métodos de pago:', err)
-    });
-  }
+  console.log('Procesando venta normal');
+  // reset mínimos antes de mostrar
+  this.selectedMetodoPago = null;
+  this.isVentaMonedero = false;
+  this.montoRecibido = 0;
+
+  this.metodosPagoService.listarMetodosPago().subscribe({
+    next: (response) => {
+      this.metodosPago = response;
+      this.showPaymentMethodModal = true;
+      console.log('processVentaNormal: métodos cargados, modal mostrado');
+    },
+    error: (err) => console.error('Error obteniendo métodos de pago:', err)
+  });
+}
+
 
   /** Selecciona un método de pago cuando se hace clic sobre uno */
   seleccionarMetodoPago(metodo: any): void {
@@ -388,51 +516,186 @@ export class VentaComponent implements OnInit {
 
 
 
+
+
+
+
+
   /** Confirma la venta normal una vez que se seleccionó el método de pago, 
      y valida (por ejemplo, para efectivo, el monto recibido y calcula cambio). */
   confirmarVenta(): void {
     if (!this.selectedMetodoPago) return;
 
-    // Recupera el usuario logueado
     const user_idStr = localStorage.getItem('user_id');
-    const user_id = user_idStr ? Number(user_idStr) : 0;
-    if (!user_id) {
-      console.error('No se encontró un usuario logueado válido. user_id:', user_id);
+    const usuario_id = user_idStr ? Number(user_idStr) : 0;
+    if (!usuario_id) {
+      console.error('No se encontró un usuario logueado válido. user_id:', usuario_id);
       return;
     }
 
-    // Para este flujo de venta normal, tomamos el total de venta sin subsidio.
-    const payload = {
-      saleData: {
-        empleado_id: 50,             // Valor por defecto para venta normal
-        usuario_id: user_id,
-        total_venta: this.transactionTotal, // Total a pagar sin descuentos (ya que en venta normal no hay subsidio)
-        subsidio_aplicado: 0,
-        tipo_venta: "pdv",            // Se mantiene "pdv" por defecto
-        monedero_id: 26,             // Valor por defecto para venta normal
-        metodo_pago_id: this.selectedMetodoPago.id  // Enviar el ID, no el nombre
-      },
-      details: this.cart.map(item => ({
-        producto_id: item.id,
-        cantidad: item.cantidad,
-        precio_unitario: parseFloat(item.precio_venta.toString()),
-        subsidio_aplicado: 0
-      }))
+    if (!Array.isArray(this.cart) || this.cart.length === 0) {
+      alert('El carrito está vacío');
+      return;
+    }
+
+    const DEFAULT_IMPUESTO_ID = 1;
+    const impuestoFromItems = this.cart
+      .map(i => (i as any).impuesto_id)
+      .find(v => v != null);
+    const impuesto_id = (this as any).selectedTaxId ?? impuestoFromItems ?? DEFAULT_IMPUESTO_ID;
+
+    // Construir details (array separado)
+    const details = this.cart.map(item => {
+      const precio = item.precio_venta != null ? Number(item.precio_venta) : 0;
+      const cantidad = item.cantidad != null ? Number(item.cantidad) : 0;
+      return {
+        producto_id: Number(item.id),
+        cantidad,
+        precio_unitario: Number(precio.toFixed(2))
+      };
+    });
+
+    if (!Array.isArray(details) || details.length === 0) {
+      alert('No hay detalles válidos para la venta');
+      return;
+    }
+    if (!impuesto_id) {
+      alert('Falta impuesto para la venta');
+      return;
+    }
+
+    const saleData = {
+      empleado_id: 50,
+      usuario_id,
+      total_venta: Number(this.transactionTotal) || 0,
+      subsidio_aplicado: 0,
+      tipo_venta: 'pdv',
+      monedero_id: 26,
+      metodo_pago_id: Number(this.selectedMetodoPago.id),
+      impuesto_id
     };
 
+    const payload = { saleData, details };
 
-    // Enviamos la venta normal al backend
+    console.log('Payload venta normal (enviado):', payload);
+
     this.transaccionesService.procesarTransaccion(payload).subscribe({
-      next: (response: any) => {
-        console.log('Venta normal procesada:', response);
-        alert(`Venta registrada con ${this.selectedMetodoPago.nombre}`);
-        // Limpiar el carrito y cerrar modales
+      next: async (response: any) => {
+        // Logs diagnósticos
+        console.log('DEBUG_PRINT: next handler ENTER - response:', response);
+        console.log('DEBUG_PRINT: this.cart:', JSON.parse(JSON.stringify(this.cart)));
+        console.log('DEBUG_PRINT: selectedMetodoPago:', this.selectedMetodoPago);
+        console.log('DEBUG_PRINT: transactionTotal/subsidio/net:', this.transactionTotal, this.subsidioTotal, this.netTotal);
+
+        alert(`Venta registrada con ${this.selectedMetodoPago?.nombre ?? 'método'}`);
+
+        // Determinar si es venta por monedero
+        const esMonedero = !!this.isVentaMonedero || (this.selectedMetodoPago?.codigo?.toLowerCase() === 'monedero');
+
+        // Preparar datos del receipt (comunes)
+        const itemsForReceipt = this.cart.map(it => ({
+          nombre: it.nombre,
+          cantidad: Number(it.cantidad || 0),
+          precio_unitario: Number(it.precio_venta || 0),
+          subtotal: Number(((it.precio_venta || 0) * (it.cantidad || 0)).toFixed(2)),
+          subsidio_aplicado: Number((it as any).subsidio_aplicado ?? 0)
+        }));
+
+        // Datos específicos de monedero
+        let monederoInfo: { saldo_anterior: number, saldo_final: number } | undefined = undefined;
+        if (esMonedero && this.empleado?.monedero) {
+          const saldoAnterior = Number(this.empleado.monedero.saldo ?? 0);
+          const saldoFinal = Number((saldoAnterior - this.netTotal).toFixed(2));
+          monederoInfo = { saldo_anterior: saldoAnterior, saldo_final: saldoFinal };
+        }
+
+        // Antes de intentar imprimir, construir receipt completo
+        const metodo_codigo = this.selectedMetodoPago?.codigo?.toLowerCase() ?? '';
+        // calcular cambio solo si pago en efectivo y montoRecibido existe
+        const cambio = (metodo_codigo === 'efectivo' && this.montoRecibido)
+          ? Number((this.montoRecibido - this.transactionTotal).toFixed(2))
+          : 0;
+
+        // Construir objeto receipt
+        const receipt = {
+          tipo: esMonedero ? 'monedero' as const : 'normal' as const,
+          venta: {
+            venta_id: response?.venta_id,
+            referencia: response?.referencia,
+            usuario_nombre: localStorage.getItem('user_name') || undefined,
+            usuario_codigo: localStorage.getItem('user_code') || undefined, // opcional
+            empleado_nombre: this.empleado?.nombre ?? 'Cajero',
+            fecha: new Date().toLocaleString(),
+            metodo_codigo: metodo_codigo,
+            metodo_nombre: this.selectedMetodoPago?.nombre,
+            cambio: cambio,
+            items: itemsForReceipt,
+            total_bruto: Number(this.transactionTotal || 0),
+            total_subsidio: Number(this.subsidioTotal || 0),
+            total_neto: Number(this.netTotal || 0)
+          },
+          monedero: monederoInfo
+        };
+
+        // Intentar imprimir (no bloquear el flujo si falla)
+        try {
+          const selectedPrinter = localStorage.getItem('selected_printer') || '';
+          console.log('DEBUG_PRINT: attempting print on printer:', selectedPrinter);
+          console.log('DEBUG_PRINT: selectedPrinter before print:', selectedPrinter);
+          console.log('DEBUG_PRINT: receipt.items count:', receipt.venta.items.length);
+
+          if (!selectedPrinter) {
+            console.warn('DEBUG_PRINT: No selected printer, skipping print');
+          } else {
+            try {
+              await this.printerService.printReceipt(selectedPrinter, receipt);
+              console.log('DEBUG_PRINT: printReceipt resolved (first attempt)');
+            } catch (err) {
+              console.error('DEBUG_PRINT: printReceipt error (first attempt):', err);
+              // reintento con reconexión
+              try {
+                await this.printerService.connect();
+                await this.printerService.printReceipt(selectedPrinter, receipt);
+                console.log('DEBUG_PRINT: printReceipt resolved (after reconnect)');
+              } catch (err2) {
+                console.error('DEBUG_PRINT: print failed after reconnect:', err2);
+              }
+            }
+          }
+        } catch (e) {
+          console.error('DEBUG_PRINT: unexpected error while printing:', e);
+        }
+
+        // Si fue monedero, actualizar saldo local en UI
+        if (esMonedero && this.empleado && this.empleado.monedero && receipt.monedero) {
+          this.empleado.monedero.saldo = receipt.monedero.saldo_final;
+        }
+
+        // Limpieza y cierre (solo después de intentar imprimir)
         this.cart = [];
+        // Si era monedero, dejamos empleado null; si quieres mantener empleado para otro uso, ajusta aquí
+        this.empleado = null;
+        this.transactionTotal = 0;
+        this.subsidioTotal = 0;
+        this.netTotal = 0;
         this.closeModals();
       },
-      error: (err: any) => console.error('Error en venta normal:', err)
+
+      error: (err: any) => {
+        console.error('Error en venta normal:', err);
+        alert(err?.error?.error || 'Error al procesar la venta');
+      }
     });
   }
+
+
+
+
+
+
+
+
+
 
   // Puedes reutilizar processPaymentEfectivo() para validar que el monto recibido es suficiente
   processPaymentEfectivo(): void {
@@ -464,5 +727,6 @@ export class VentaComponent implements OnInit {
     alert("Cobrar en la terminal y luego presiona aceptar para finalizar el pago.");
     this.confirmarVenta();
   }
+
 
 }

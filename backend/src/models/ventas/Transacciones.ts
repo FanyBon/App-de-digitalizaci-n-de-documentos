@@ -16,10 +16,17 @@ export interface TransaccionInterface {
 
 export class Transaccion {
     // Método para generar una referencia de venta única
-  static generarReferencia(): string {
-    const timestamp = new Date().getTime(); // Obtiene el tiempo en milisegundos
-    const randomNum = Math.floor(Math.random() * 10000); // Genera un número aleatorio
-    return `VENTA-${timestamp}-${randomNum}`;
+  static generarReferenciaNumerica(): string {
+    const d = new Date();
+    const pad = (n: number, z = 2) => n.toString().padStart(z, '0');
+    const yyyy = d.getFullYear();
+    const MM   = pad(d.getMonth() + 1);
+    const dd   = pad(d.getDate());
+    const hh   = pad(d.getHours());
+    const mm   = pad(d.getMinutes());
+    const ss   = pad(d.getSeconds());
+    const ms  = pad(d.getMilliseconds(), 3);
+    return `${yyyy}${MM}${dd}${hh}${mm}${ss}${ms}`;
   }
   
   // Listar todas las transacciones

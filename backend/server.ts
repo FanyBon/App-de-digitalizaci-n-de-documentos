@@ -30,6 +30,7 @@ import perfilesroutes from './src/routes/usuarios_plataforma/perfiles';
 import usuarioRolesRoutes from './src/routes/usuarios_plataforma/usuarioRolesRoutes'
 import usuarioPerfilRoutes from './src/routes/usuarios_plataforma/usuarioPerfilRoutes'
 import importsRoutes from './src/routes/imports/importsRoutes';
+import impuestosRoutes from './src/routes/ventas/impuestosRoutes';
 
 dotenv.config();
 
@@ -94,6 +95,7 @@ app.use('/api', perfilesroutes);
 app.use('/api', usuarioRolesRoutes);
 app.use('/api', usuarioPerfilRoutes)
 app.use('/api/imports', importsRoutes);
+app.use('/api/impuestos', impuestosRoutes);
 
 app.use('/api', inventarioRoutes);
 app.use('/api', chipsRoutes);

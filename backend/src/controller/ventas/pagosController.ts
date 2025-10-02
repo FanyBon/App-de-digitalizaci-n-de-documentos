@@ -35,7 +35,7 @@ export const procesarPagoNormal = async (
     }
     const metodo_pago_id = Number(saleData.metodo_pago_id);
 
-    let referencia = Transaccion.generarReferencia() + `-MP${metodo_pago_id}`;
+let referencia = `${Transaccion.generarReferenciaNumerica()}-MP${metodo_pago_id}`;
 
     const [saleResult]: any = await conn.query(
       `INSERT INTO ventas_pdv

@@ -32,6 +32,20 @@ export const obtenerProducto = async (req: Request, res: Response, next: NextFun
 export const crearProducto = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const producto = req.body;
+     // Validación mínima
+    if (!producto.nombre || !producto.codigo_barras) {
+      res.status(400).json({ error: 'nombre y codigo_barras son obligatorios' });
+      return;
+    }
+    // Opcional: validar impuetos_extra
+    if (producto.inc_prodfin != null && ![0,1].includes(producto.inc_prodfin)) {
+      res.status(400).json({ error: 'inc_prodfin debe ser 0 o 1' });
+      return;
+    }
+    if (producto.impuestos_extra && !Array.isArray(producto.impuestos_extra)) {
+      res.status(400).json({ error: 'impuestos_extra debe ser un array de IDs' });
+      return;
+    }
     // Se asume que en producto se envían los campos obligatorios como nombre y codigo_barras
     const result = await Producto.crear(producto);
     if (!result.success) {
@@ -59,7 +73,7 @@ export const editarProducto = async (
 
     // Extraemos del body (sin forzar null)
     const {
-      nombre,
+    nombre,
       codigo_barras,
       descripcion,
       aplica_subsidio,
@@ -69,7 +83,10 @@ export const editarProducto = async (
       precio_venta,
       costo,
       subsidio_id,
-      articulo_id
+      articulo_id,
+      impuesto_id,
+      inc_prodfin,
+      impuestos_extra
     } = req.body as Partial<ProductoInterface>;
 
     // Validación mínima de obligatorios
@@ -100,8 +117,11 @@ export const editarProducto = async (
       precio_venta,
       costo,
       // si viene como número, lo agregamos; si no, lo omitimos
-      ...(subsidio_id != null && { subsidio_id }),
-      ...(articulo_id != null && { articulo_id })
+      ...(subsidio_id   != null && { subsidio_id   }),
+      ...(articulo_id  != null && { articulo_id   }),
+      ...(impuesto_id  != null && { impuesto_id   }),
+      ...(inc_prodfin  != null && { inc_prodfin   }),
+      ...(Array.isArray(impuestos_extra) && { impuestos_extra })
     };
 
     const result = await Producto.editar(id, dataToUpdate);

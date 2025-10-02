@@ -2,9 +2,10 @@
   <h1 class="text-xl font-bold mb-4">Configuración de impresora</h1>
 
   <label class="block mb-2 text-sm font-medium text-gray-700">Selecciona impresora:</label>
-  <select [(ngModel)]="selectedPrinter" class="mb-4 px-4 py-2 border rounded w-full">
-    <option *ngFor="let printer of printers" [value]="printer">{{ printer }}</option>
-  </select>
+  <select [(ngModel)]="selectedPrinter" (change)="onPrinterChange()" class="mb-4 px-4 py-2 border rounded w-full">
+  <option *ngFor="let printer of printers" [value]="printer">{{ printer }}</option>
+</select>
+
 
   <button (click)="conectar()" class="bg-green-600 text-white px-4 py-2 rounded mr-2">
     Conectar a QZ Tray
