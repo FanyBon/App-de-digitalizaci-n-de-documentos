@@ -1,0 +1,108 @@
+<!-- VERSION INTEGRADA - TODO EN UN ARCHIVO -->
+<div class="lista-usuarios">
+  
+  <!-- BARRA DE ACCIONES -->
+  <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div class="flex flex-col sm:flex-row gap-3 flex-1">
+        <div class="flex-1 max-w-md">
+          <div class="relative">
+            <input type="text" [(ngModel)]="searchTerm" (input)="buscarUsuarios()" placeholder="Buscar..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button (click)="cambiarFiltroActivo('todos')" [class]="filtroActivo === 'todos' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'" class="px-4 py-2 rounded-lg transition text-sm font-medium">Todos ({{ totalItems }})</button>
+          <button (click)="cambiarFiltroActivo('activos')" [class]="filtroActivo === 'activos' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'" class="px-4 py-2 rounded-lg transition text-sm font-medium"><i class="fas fa-check-circle mr-1"></i>Activos</button>
+          <button (click)="cambiarFiltroActivo('inactivos')" [class]="filtroActivo === 'inactivos' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'" class="px-4 py-2 rounded-lg transition text-sm font-medium"><i class="fas fa-times-circle mr-1"></i>Inactivos</button>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button (click)="abrirModalCrear()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm font-medium"><i class="fas fa-plus"></i><span class="hidden sm:inline">Nuevo Usuario</span></button>
+        <button (click)="exportarExcel()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm font-medium"><i class="fas fa-file-excel"></i><span class="hidden lg:inline">Excel</span></button>
+        <button (click)="exportarCSV()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm font-medium"><i class="fas fa-file-csv"></i><span class="hidden lg:inline">CSV</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLA -->
+  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div *ngIf="loading" class="flex items-center justify-center py-12"><div class="flex flex-col items-center gap-3"><i class="fas fa-spinner fa-spin text-4xl text-blue-600"></i><p class="text-gray-600">Cargando...</p></div></div>
+    <div *ngIf="!loading && paginatedUsuarios.length > 0" class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Empresa</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ubicación</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rol</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estatus</th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let usuario of paginatedUsuarios" class="hover:bg-gray-50 transition">
+            <td class="px-6 py-4 whitespace-nowrap"><div class="flex items-center"><div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center"><i class="fas fa-user text-blue-600"></i></div><div class="ml-4"><div class="text-sm font-medium text-gray-900">{{ usuario.nombre_usuario }}</div><div class="text-xs text-gray-500">ID: {{ usuario.id }}</div></div></div></td>
+            <td class="px-6 py-4 whitespace-nowrap"><i class="fas fa-envelope mr-2 text-gray-400"></i>{{ usuario.email }}</td>
+            <td class="px-6 py-4 whitespace-nowrap"><i class="fas fa-building mr-2 text-gray-400"></i>{{ usuario.empresa_nombre || 'N/A' }}</td>
+            <td class="px-6 py-4 whitespace-nowrap"><i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>{{ usuario.ubicacion_nombre || 'Sin asignar' }}</td>
+            <td class="px-6 py-4 whitespace-nowrap"><span [class]="getRolBadgeClass(usuario.roles)" class="px-3 py-1 text-xs rounded-full">{{ getRolTexto(usuario.roles) }}</span></td>
+            <td class="px-6 py-4 whitespace-nowrap"><button (click)="cambiarEstatus(usuario)" [class]="usuario.activo ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'" class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold transition"><i class="fas" [ngClass]="usuario.activo ? 'fa-check-circle' : 'fa-times-circle'"></i>{{ usuario.activo ? 'Activo' : 'Inactivo' }}</button></td>
+            <td class="px-6 py-4 whitespace-nowrap text-center"><div class="flex items-center justify-center gap-2"><button (click)="verUsuario(usuario)" class="text-blue-600 hover:text-blue-900" title="Ver"><i class="fas fa-eye"></i></button><button (click)="abrirModalEditar(usuario)" class="text-yellow-600 hover:text-yellow-900" title="Editar"><i class="fas fa-edit"></i></button><button (click)="eliminarUsuario(usuario)" class="text-red-600 hover:text-red-900" title="Eliminar"><i class="fas fa-trash"></i></button></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div *ngIf="!loading && paginatedUsuarios.length === 0" class="text-center py-12"><i class="fas fa-users text-6xl text-gray-300 mb-4"></i><p class="text-gray-600 text-lg mb-2">No se encontraron usuarios</p></div>
+    
+    <!-- PAGINACION -->
+    <div *ngIf="!loading && paginatedUsuarios.length > 0" class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="text-sm text-gray-600">Mostrando <span class="font-medium">{{ (currentPage - 1) * itemsPerPage + 1 }}</span> a <span class="font-medium">{{ Math.min(currentPage * itemsPerPage, totalItems) }}</span> de <span class="font-medium">{{ totalItems }}</span></div>
+        <div class="flex items-center gap-2">
+          <button (click)="changePage(1)" [disabled]="currentPage === 1" class="px-3 py-1 border rounded-md text-sm disabled:opacity-50"><i class="fas fa-angle-double-left"></i></button>
+          <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1" class="px-3 py-1 border rounded-md text-sm disabled:opacity-50"><i class="fas fa-chevron-left"></i></button>
+          <button *ngFor="let page of pageNumbers" (click)="changePage(page)" [class]="currentPage === page ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'" class="px-3 py-1 border rounded-md text-sm">{{ page }}</button>
+          <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages" class="px-3 py-1 border rounded-md text-sm disabled:opacity-50"><i class="fas fa-chevron-right"></i></button>
+          <button (click)="changePage(totalPages)" [disabled]="currentPage === totalPages" class="px-3 py-1 border rounded-md text-sm disabled:opacity-50"><i class="fas fa-angle-double-right"></i></button>
+        </div>
+        <div class="flex items-center gap-2"><label class="text-sm text-gray-600">Mostrar:</label><select [(ngModel)]="itemsPerPage" (change)="changePage(1)" class="border rounded-md text-sm px-2 py-1"><option [value]="5">5</option><option [value]="10">10</option><option [value]="25">25</option><option [value]="50">50</option></select></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLES -->
+<div *ngIf="mostrarModalDetalle && usuarioDetalle" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="cerrarModalDetalle()">
+  <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+    <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4"><div class="h-16 w-16 rounded-full bg-white/20 flex items-center justify-center"><i class="fas fa-user text-3xl"></i></div><div><h2 class="text-2xl font-bold">{{ usuarioDetalle.nombre_usuario }}</h2><p class="text-blue-100 text-sm">{{ usuarioDetalle.email }}</p></div></div>
+        <button (click)="cerrarModalDetalle()" class="text-white hover:bg-white/20 rounded-full p-2"><i class="fas fa-times text-xl"></i></button>
+      </div>
+    </div>
+    <div class="p-6 space-y-6">
+      <div><h3 class="text-lg font-semibold text-gray-800 mb-4"><i class="fas fa-info-circle text-blue-600 mr-2"></i>Información General</h3><div class="grid grid-cols-2 gap-4"><div class="bg-gray-50 p-4 rounded-lg"><label class="text-sm text-gray-500 block mb-1">ID</label><p class="text-gray-900 font-medium">{{ usuarioDetalle.id }}</p></div><div class="bg-gray-50 p-4 rounded-lg"><label class="text-sm text-gray-500 block mb-1">Nombre de Usuario</label><p class="text-gray-900 font-medium">{{ usuarioDetalle.nombre_usuario }}</p></div><div class="bg-gray-50 p-4 rounded-lg"><label class="text-sm text-gray-500 block mb-1">Email</label><p class="text-gray-900 font-medium">{{ usuarioDetalle.email }}</p></div><div class="bg-gray-50 p-4 rounded-lg"><label class="text-sm text-gray-500 block mb-1">Estatus</label><span [class]="usuarioDetalle.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold"><i class="fas" [ngClass]="usuarioDetalle.activo ? 'fa-check-circle' : 'fa-times-circle'"></i>{{ usuarioDetalle.activo ? 'Activo' : 'Inactivo' }}</span></div></div></div>
+      <div><h3 class="text-lg font-semibold text-gray-800 mb-4"><i class="fas fa-building text-blue-600 mr-2"></i>Organización</h3><div class="grid grid-cols-2 gap-4"><div class="bg-gray-50 p-4 rounded-lg"><label class="text-sm text-gray-500 block mb-1">Empresa</label><p class="text-gray-900 font-medium">{{ usuarioDetalle.empresa_nombre || 'N/A' }}</p></div><div class="bg-gray-50 p-4 rounded-lg"><label class="text-sm text-gray-500 block mb-1">Ubicación</label><p class="text-gray-900 font-medium">{{ usuarioDetalle.ubicacion_nombre || 'Sin asignar' }}</p></div></div></div>
+      <div><h3 class="text-lg font-semibold text-gray-800 mb-4"><i class="fas fa-user-shield text-blue-600 mr-2"></i>Roles y Perfiles</h3><div class="grid grid-cols-2 gap-4"><div class="bg-gray-50 p-4 rounded-lg"><label class="text-sm text-gray-500 block mb-2">Roles</label><div *ngIf="usuarioDetalle.roles && usuarioDetalle.roles.length > 0" class="flex flex-wrap gap-2"><span *ngFor="let rol of usuarioDetalle.roles" class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">{{ rol.nombre }}</span></div><p *ngIf="!usuarioDetalle.roles || usuarioDetalle.roles.length === 0" class="text-gray-500 text-sm italic">Sin roles</p></div><div class="bg-gray-50 p-4 rounded-lg"><label class="text-sm text-gray-500 block mb-2">Perfiles</label><div *ngIf="usuarioDetalle.perfiles && usuarioDetalle.perfiles.length > 0" class="flex flex-wrap gap-2"><span *ngFor="let perfil of usuarioDetalle.perfiles" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">{{ perfil.nombre }}</span></div><p *ngIf="!usuarioDetalle.perfiles || usuarioDetalle.perfiles.length === 0" class="text-gray-500 text-sm italic">Sin perfiles</p></div></div></div>
+    </div>
+    <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end"><button (click)="cerrarModalDetalle()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- MODAL FORMULARIO -->
+<div *ngIf="mostrarModalForm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="cerrarModalForm()">
+  <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+    <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
+      <div class="flex items-center justify-between"><div class="flex items-center gap-3"><i [class]="'fas ' + iconoModal + ' text-2xl'"></i><h2 class="text-2xl font-bold">{{ tituloModal }}</h2></div><button (click)="cerrarModalForm()" class="text-white hover:bg-white/20 rounded-full p-2"><i class="fas fa-times text-xl"></i></button></div>
+    </div>
+    <form [formGroup]="formulario" (ngSubmit)="guardarUsuario()" class="p-6 space-y-6">
+      <div><h3 class="text-lg font-semibold text-gray-800 mb-4"><i class="fas fa-user text-blue-600 mr-2"></i>Información Básica</h3><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700 mb-2">Email <span class="text-red-500">*</span></label><input type="email" formControlName="email" placeholder="usuario@ejemplo.com" [class]="tieneError('email') ? 'border-red-500' : 'border-gray-300'" class="w-full px-4 py-2 border rounded-lg"/><p *ngIf="tieneError('email')" class="text-red-500 text-xs mt-1">{{ getMensajeError('email') }}</p></div><div><label class="block text-sm font-medium text-gray-700 mb-2">Nombre de Usuario <span class="text-red-500">*</span></label><input type="text" formControlName="nombre_usuario" placeholder="usuario123" [class]="tieneError('nombre_usuario') ? 'border-red-500' : 'border-gray-300'" class="w-full px-4 py-2 border rounded-lg"/><p *ngIf="tieneError('nombre_usuario')" class="text-red-500 text-xs mt-1">{{ getMensajeError('nombre_usuario') }}</p></div><div class="col-span-2"><label class="block text-sm font-medium text-gray-700 mb-2">Contraseña <span *ngIf="modoForm === 'crear'" class="text-red-500">*</span><span *ngIf="modoForm === 'editar'" class="text-gray-500 text-xs">(dejar vacío para no cambiar)</span></label><input type="password" formControlName="password" placeholder="••••••••" [class]="tieneError('password') ? 'border-red-500' : 'border-gray-300'" class="w-full px-4 py-2 border rounded-lg"/><p *ngIf="tieneError('password')" class="text-red-500 text-xs mt-1">{{ getMensajeError('password') }}</p></div></div></div>
+      <div><h3 class="text-lg font-semibold text-gray-800 mb-4"><i class="fas fa-building text-blue-600 mr-2"></i>Organización</h3><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700 mb-2">Empresa <span class="text-red-500">*</span></label><select formControlName="empresa_id" (change)="onEmpresaChange()" [class]="tieneError('empresa_id') ? 'border-red-500' : 'border-gray-300'" class="w-full px-4 py-2 border rounded-lg"><option value="">Seleccionar...</option><option *ngFor="let empresa of empresas" [value]="empresa.id">{{ empresa.nombre }}</option></select></div><div><label class="block text-sm font-medium text-gray-700 mb-2">Ubicación</label><select formControlName="ubicacion_id" class="w-full px-4 py-2 border rounded-lg"><option value="">Sin ubicación</option><option *ngFor="let ubicacion of ubicacionesFiltradas" [value]="ubicacion.id">{{ ubicacion.nombre }}</option></select></div></div></div>
+      <div><h3 class="text-lg font-semibold text-gray-800 mb-4"><i class="fas fa-user-shield text-blue-600 mr-2"></i>Roles</h3><div class="grid grid-cols-3 gap-3"><label *ngFor="let rol of roles" class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" [class.bg-purple-50]="isRolSelected(rol.id)" [class.border-purple-500]="isRolSelected(rol.id)"><input type="checkbox" [checked]="isRolSelected(rol.id)" (change)="toggleRol(rol.id)" class="w-5 h-5"/><span class="text-sm">{{ rol.nombre }}</span></label></div></div>
+      <div><h3 class="text-lg font-semibold text-gray-800 mb-4"><i class="fas fa-id-card text-blue-600 mr-2"></i>Perfiles</h3><div class="grid grid-cols-3 gap-3"><label *ngFor="let perfil of perfiles" class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50" [class.bg-blue-50]="isPerfilSelected(perfil.id)" [class.border-blue-500]="isPerfilSelected(perfil.id)"><input type="checkbox" [checked]="isPerfilSelected(perfil.id)" (change)="togglePerfil(perfil.id)" class="w-5 h-5"/><span class="text-sm">{{ perfil.nombre }}</span></label></div></div>
+    </form>
+    <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end gap-3"><button type="button" (click)="cerrarModalForm()" [disabled]="guardando" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg">Cancelar</button><button type="button" (click)="guardarUsuario()" [disabled]="guardando || formulario.invalid" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"><i *ngIf="guardando" class="fas fa-spinner fa-spin"></i><i *ngIf="!guardando" [class]="modoForm === 'crear' ? 'fas fa-plus' : 'fas fa-save'"></i><span>{{ guardando ? 'Guardando...' : (modoForm === 'crear' ? 'Crear' : 'Guardar') }}</span></button></div>
+  </div>
+</div>

@@ -1,0 +1,62 @@
+/* Animaciones para la tabla */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+tbody tr {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Hover mejorado en filas */
+tbody tr:hover {
+  background-color: #f9fafb;
+  transition: background-color 0.2s ease;
+}
+
+/* Modal backdrop animation */
+.fixed {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Transición suave para badges */
+span[class*="bg-"] {
+  transition: all 0.2s ease;
+}
+
+/* Animación para botones */
+button {
+  transition: all 0.2s ease;
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+/* Vista previa de icono y color en el modal */
+.fas[class*="fa-"] {
+  transition: color 0.2s ease;
+}
+
+/* Responsive: Ocultar columnas en móviles */
+@media (max-width: 768px) {
+  /* Ocultar columna de características en tablets */
+  th:nth-child(5),
+  td:nth-child(5) {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  /* En móviles pequeños, ocultar también orden */
+  th:nth-child(6),
+  td:nth-child(6) {
+    display: none;
+  }
+}

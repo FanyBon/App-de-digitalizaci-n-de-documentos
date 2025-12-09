@@ -1,0 +1,75 @@
+<!-- src/app/components/session-setup/seleccion-ubicacion/seleccion-ubicacion.component.html -->
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+  <div class="w-full max-w-4xl bg-white rounded-xl shadow-2xl p-8 m-4">
+    
+    <!-- Logo y Título -->
+    <div class="text-center mb-8">
+      <img src="assets/halucar.jpeg" alt="Logo Procomin" class="w-20 h-20 mx-auto mb-4 rounded-full shadow-lg" />
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">
+        Bienvenido, {{ username }}
+      </h1>
+      <p class="text-gray-600 text-lg">
+        Selecciona tu ubicación de trabajo
+      </p>
+    </div>
+
+    <!-- Grid de ubicaciones -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div
+        *ngFor="let ubicacion of ubicaciones"
+        (click)="seleccionarUbicacion(ubicacion)"
+        class="border-2 border-gray-300 rounded-lg p-6 hover:border-blue-600 hover:shadow-xl cursor-pointer transition-all duration-300 transform hover:scale-105 bg-white"
+      >
+        <div class="flex items-start">
+          <div class="flex-shrink-0 mr-4">
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <i class="fas fa-map-marker-alt text-blue-600 text-xl"></i>
+            </div>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">
+              {{ ubicacion.nombre }}
+            </h3>
+            <p class="text-gray-600 text-sm">
+              <i class="fas fa-barcode mr-1"></i>
+              Código: {{ ubicacion.codigo }}
+            </p>
+            <span 
+              *ngIf="ubicacion.activo"
+              class="inline-flex items-center px-2 py-1 mt-2 rounded-full text-xs font-medium bg-green-100 text-green-800"
+            >
+              <span class="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+              Activo
+            </span>
+          </div>
+          <div class="flex-shrink-0">
+            <i class="fas fa-chevron-right text-gray-400"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje si no hay ubicaciones -->
+    <div *ngIf="ubicaciones.length === 0 && !loading" class="text-center py-12">
+      <i class="fas fa-inbox text-gray-400 text-6xl mb-4"></i>
+      <p class="text-gray-600 text-lg">
+        No hay ubicaciones disponibles para tu usuario.
+      </p>
+      <p class="text-gray-500 text-sm mt-2">
+        Contacta al administrador del sistema.
+      </p>
+    </div>
+
+    <!-- Botón de cerrar sesión -->
+    <div class="mt-8 text-center">
+      <button
+        (click)="cerrarSesion()"
+        class="inline-flex items-center px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-300"
+      >
+        <i class="fas fa-sign-out-alt mr-2"></i>
+        Cerrar Sesión
+      </button>
+    </div>
+
+  </div>
+</div>

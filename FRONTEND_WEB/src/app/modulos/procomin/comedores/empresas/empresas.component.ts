@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { EmpresasService } from '../../../../services/sistemas/control_comidas/empresas.service';
+import { EmpresasService } from '../../../../services/empresas/empresas.service';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';

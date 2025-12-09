@@ -1,0 +1,68 @@
+/* Animaciones para la tabla */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+tbody tr {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Hover mejorado en filas */
+tbody tr:hover {
+    background-color: #f9fafb;
+    transition: background-color 0.2s ease;
+}
+
+/* Modal backdrop animation */
+.fixed {
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* Dropdown empresas con scroll personalizado */
+.max-h-48 {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.max-h-48::-webkit-scrollbar {
+    width: 6px;
+}
+
+.max-h-48::-webkit-scrollbar-track {
+    background: #f7fafc;
+    border-radius: 10px;
+}
+
+.max-h-48::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+}
+
+.max-h-48::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* Transición suave para dropdown */
+.absolute {
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -1,9 +1,9 @@
-import { getConnection } from '../../config/db_controlcomidas';
+import { getPool } from '../../config/db_controlcomidas';
 
 export class InventarioArticulo {
   // Lista todos los artículos
   static async listar(): Promise<any[]> {
-    const conn = await getConnection('local');
+    const conn = await getPool('local');
     try {
       const [rows]: any = await conn.query('SELECT * FROM inventario_articulos');
       return rows;
@@ -24,7 +24,7 @@ export class InventarioArticulo {
     empresa_id: number;
     usuario_id: number;
   }): Promise<any> {
-    const conn = await getConnection('local');
+    const conn = await getPool('local');
     try {
       const { nombre, categoria, tipo_articulo, descripcion, stock_total, stock_disponible, empresa_id, usuario_id } = data;
       const [result]: any = await conn.query(
@@ -51,7 +51,7 @@ export class InventarioArticulo {
     empresa_id?: number;
     usuario_id?: number;
   }): Promise<any> {
-    const conn = await getConnection('local');
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(
         `UPDATE inventario_articulos SET ? WHERE id = ?`,
@@ -69,7 +69,7 @@ export class InventarioArticulo {
 
   // Eliminar un artículo
   static async eliminar(id: number): Promise<any> {
-    const conn = await getConnection('local');
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(
         `DELETE FROM inventario_articulos WHERE id = ?`,

@@ -1,0 +1,369 @@
+/* ========================================
+   ANIMACIONES GENERALES
+========================================= */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+tbody tr {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ========================================
+   TABLA
+========================================= */
+
+tbody tr:hover {
+  background-color: #f9fafb;
+  transition: background-color 0.2s ease;
+}
+
+/* ========================================
+   MODAL
+========================================= */
+
+.fixed {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* ========================================
+   BADGES Y BOTONES
+========================================= */
+
+span[class*="bg-"] {
+  transition: all 0.2s ease;
+}
+
+button {
+  transition: all 0.2s ease;
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+/* ========================================
+   DROPDOWN EMPRESA PADRE
+========================================= */
+
+.dropdown-empresas-padre .max-h-48 {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.dropdown-empresas-padre .max-h-48::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dropdown-empresas-padre .max-h-48::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 10px;
+}
+
+.dropdown-empresas-padre .max-h-48::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 10px;
+}
+
+.dropdown-empresas-padre .max-h-48::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Transición suave para dropdown */
+.dropdown-empresas-padre .absolute {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   VISTA DE TARJETAS
+========================================= */
+
+/* Animación de entrada para tarjetas */
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.grid > div {
+  animation: cardFadeIn 0.4s ease-out forwards;
+}
+
+/* Delay escalonado para animación */
+.grid > div:nth-child(1) { animation-delay: 0.05s; }
+.grid > div:nth-child(2) { animation-delay: 0.1s; }
+.grid > div:nth-child(3) { animation-delay: 0.15s; }
+.grid > div:nth-child(4) { animation-delay: 0.2s; }
+.grid > div:nth-child(5) { animation-delay: 0.25s; }
+.grid > div:nth-child(6) { animation-delay: 0.3s; }
+.grid > div:nth-child(7) { animation-delay: 0.35s; }
+.grid > div:nth-child(8) { animation-delay: 0.4s; }
+.grid > div:nth-child(9) { animation-delay: 0.45s; }
+
+/* Hover effect en tarjetas */
+.grid > div:hover {
+  transform: translateY(-4px);
+  transition: all 0.3s ease;
+}
+
+/* Gráficas de progreso animadas */
+.bg-gradient-to-r {
+  transition: width 1s ease-out;
+}
+
+/* Badges en header de tarjeta */
+.bg-gradient-to-r span {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ========================================
+   ICONOS ROTADOS (Sub-empresa)
+========================================= */
+
+.fa-rotate-90 {
+  transform: rotate(90deg);
+  display: inline-block;
+}
+
+/* ========================================
+   RESPONSIVE - TABLA
+========================================= */
+
+@media (max-width: 768px) {
+  th:nth-child(4),
+  td:nth-child(4) {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  th:nth-child(5),
+  td:nth-child(5) {
+    display: none;
+  }
+}
+
+/* ========================================
+   RESPONSIVE - TARJETAS
+========================================= */
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1279px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ========================================
+   ESTADOS HOVER MEJORADOS
+========================================= */
+
+/* Hover en filas de tabla */
+tbody tr {
+  transition: all 0.2s ease;
+}
+
+tbody tr:hover {
+  background-color: #f3f4f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Hover en botones de acción */
+button[title] {
+  position: relative;
+}
+
+button[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* ========================================
+   TOGGLE DE VISTA
+========================================= */
+
+.bg-gray-200 button {
+  transition: all 0.2s ease;
+}
+
+.bg-gray-200 button:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* ========================================
+   ANIMACIONES DE BOTONES
+========================================= */
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+/* ========================================
+   SCROLLBAR PERSONALIZADO
+========================================= */
+
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f7fafc;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* ========================================
+   SOMBRAS Y PROFUNDIDAD
+========================================= */
+
+.shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.hover\:shadow-xl:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* ========================================
+   INDICADORES DE CARGA
+========================================= */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ========================================
+   TRANSICIONES SUAVES
+========================================= */
+
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========================================
+   ESTADOS DE FOCUS
+========================================= */
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* ========================================
+   BADGES ANIMADOS
+========================================= */
+
+.rounded-full {
+  transition: all 0.2s ease;
+}
+
+.rounded-full:hover {
+  transform: scale(1.05);
+}
+
+/* ========================================
+   ACCESIBILIDAD
+========================================= */
+
+button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ========================================
+   PRINT STYLES
+========================================= */
+
+@media print {
+  .bg-white {
+    background-color: white !important;
+  }
+  
+  button,
+  .shadow,
+  .shadow-md,
+  .shadow-xl {
+    display: none !important;
+  }
+  
+  table {
+    page-break-inside: avoid;
+  }
+  
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+}

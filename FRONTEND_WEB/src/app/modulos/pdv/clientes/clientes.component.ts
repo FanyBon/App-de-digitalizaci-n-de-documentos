@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms'; // Necesario para [(ngModel)]
 import { RecargasService } from 'src/app/services/recargas/recargas.service';
 import { MetodosPagoService } from 'src/app/services/recargas/metodos-pago.service';
 import { MonederosService } from 'src/app/services/recargas/monederos.service';
-import { EmpresasService } from 'src/app/services/sistemas/control_comidas/empresas.service';
+import { EmpresasService } from 'src/app/services/empresas/empresas.service';
 
 @Component({
   selector: 'app-clientes',

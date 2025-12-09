@@ -1,7 +1,7 @@
 // src/controller/ventas/pagosController.ts
 
 import { Request, Response, NextFunction } from 'express';
-import { getConnection } from '../../config/db_controlcomidas';
+import { getPool } from '../../config/db_controlcomidas';
 import { Transaccion } from '../../models/ventas/Transacciones';
 
 export const procesarPagoNormal = async (
@@ -11,7 +11,7 @@ export const procesarPagoNormal = async (
 ): Promise<void> => {
   let conn;
   try {
-    conn = await getConnection();
+    conn = await getPool().getConnection();
     await conn.beginTransaction();
 
     const { saleData, details } = req.body;
@@ -107,7 +107,7 @@ export const listarVentasNormales = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const conn = await getConnection();
+    const conn = await getPool().getConnection();
     const DEFAULT_EMP_ID = 50;
     const DEFAULT_MONEDERO_ID = 26;
 

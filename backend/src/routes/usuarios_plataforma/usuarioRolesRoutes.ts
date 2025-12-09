@@ -1,56 +1,89 @@
 // src/routes/usuarios_plataforma/usuarioRolesRoutes.ts
-
-import { Router } from 'express'
+import { Router } from 'express';
 import {
   verRolesUsuario,
+  verHistorialRolesUsuario,
   asignarRolUsuario,
-  quitarRolUsuario,
   editarRolesUsuario,
-} from '../../controller/usuarios_plataforma/usuarioRolesController'
-import {
-  verifyToken,
-  authorizeRolesOrProfiles
-} from '../../middewares/authMiddleware'
+  quitarRolUsuario,
+  eliminarRolUsuario
+} from '../../controller/usuarios_plataforma/usuarioRolesController';
+import { verifyToken, authorizeRolesOrProfiles } from '../../middewares/authMiddleware';
 
-const router = Router()
+const router = Router();
 
-// Listar los roles de un usuario
+// Roles y perfiles
+const rolesLectura = ['supAdministrador', 'admin externo', 'admin'];
+const perfilesLectura = ['superAdministrador', 'administrador externo'];
+const rolesSuperAdmin = ['supAdministrador'];
+const perfilesSuperAdmin = ['superAdministrador'];
+
+/**
+ * GET /api/usuarios/:id/roles
+ * Listar roles activos de un usuario
+ */
 router.get(
   '/usuarios/:id/roles',
   verifyToken,
-  authorizeRolesOrProfiles(
-    ['supAdministrador', 'admin externo'],
-    ['superAdministrador']
-  ),
+  authorizeRolesOrProfiles(rolesLectura, perfilesLectura),
   verRolesUsuario
-)
+);
 
-// Asignar un rol a un usuario
+/**
+ * GET /api/usuarios/:id/roles/historial
+ * Ver historial completo de roles (incluyendo removidos)
+ */
+router.get(
+  '/usuarios/:id/roles/historial',
+  verifyToken,
+  authorizeRolesOrProfiles(rolesSuperAdmin, perfilesSuperAdmin),
+  verHistorialRolesUsuario
+);
+
+/**
+ * POST /api/usuarios/:id/roles
+ * Asignar un rol a un usuario
+ * Body: { "rolId": 2 }
+ */
 router.post(
   '/usuarios/:id/roles',
   verifyToken,
-  authorizeRolesOrProfiles(
-    ['supAdministrador'],
-    ['superAdministrador']
-  ),
+  authorizeRolesOrProfiles(rolesSuperAdmin, perfilesSuperAdmin),
   asignarRolUsuario
-)
+);
 
+/**
+ * PUT /api/usuarios/:id/roles
+ * Reemplazar todos los roles de un usuario
+ * Body: { "roles": [1, 2, 3] }
+ */
 router.put(
   '/usuarios/:id/roles',
-  authorizeRolesOrProfiles(['supAdministrador'], ['superAdministrador']),
+  verifyToken,
+  authorizeRolesOrProfiles(rolesSuperAdmin, perfilesSuperAdmin),
   editarRolesUsuario
-)
+);
 
-// Quitar un rol de un usuario
+/**
+ * DELETE /api/usuarios/:id/roles/:rolId
+ * Quitar un rol de un usuario (soft delete)
+ */
 router.delete(
   '/usuarios/:id/roles/:rolId',
   verifyToken,
-  authorizeRolesOrProfiles(
-    ['supAdministrador'],
-    ['superAdministrador']
-  ),
+  authorizeRolesOrProfiles(rolesSuperAdmin, perfilesSuperAdmin),
   quitarRolUsuario
-)
+);
 
-export default router
+/**
+ * DELETE /api/usuarios/:id/roles/:rolId/permanente
+ * Eliminar físicamente un rol de un usuario (hard delete)
+ */
+router.delete(
+  '/usuarios/:id/roles/:rolId/permanente',
+  verifyToken,
+  authorizeRolesOrProfiles(rolesSuperAdmin, perfilesSuperAdmin),
+  eliminarRolUsuario
+);
+
+export default router;

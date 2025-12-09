@@ -1,0 +1,117 @@
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-[1600px] mx-auto p-6">
+
+        <!-- ========================================
+             ENCABEZADO GENERAL DEL MÓDULO
+        ========================================= -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2 flex items-center">
+                <i class="fas fa-tablet-alt text-blue-600 mr-3"></i>
+                Gestión de Dispositivos
+            </h1>
+            <p class="text-gray-600">
+                Administra los puntos de venta y tipos de dispositivos del sistema
+            </p>
+        </div>
+
+        <!-- ========================================
+             SISTEMA DE TABS
+        ========================================= -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            
+            <!-- Tabs Header / Navegación -->
+            <div class="border-b border-gray-200 bg-white">
+                <nav class="flex -mb-px" role="tablist">
+                    
+                    <!-- Tab 1: Dispositivos -->
+                    <button
+                        type="button"
+                        role="tab"
+                        [attr.aria-selected]="tabActiva === 'dispositivos'"
+                        (click)="cambiarTab('dispositivos')"
+                        [class.border-blue-600]="tabActiva === 'dispositivos'"
+                        [class.text-blue-600]="tabActiva === 'dispositivos'"
+                        [class.border-transparent]="tabActiva !== 'dispositivos'"
+                        [class.text-gray-500]="tabActiva !== 'dispositivos'"
+                        class="group inline-flex items-center gap-2 py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        
+                        <!-- Ícono -->
+                        <i class="fas fa-tablet-alt text-lg"
+                            [class.text-blue-600]="tabActiva === 'dispositivos'"
+                            [class.text-gray-400]="tabActiva !== 'dispositivos'"></i>
+                        
+                        <!-- Texto -->
+                        <span class="font-semibold">Dispositivos</span>
+                        
+                        <!-- Badge -->
+                        <span class="ml-2 px-2 py-0.5 text-xs font-medium rounded-full transition-colors"
+                            [class.bg-blue-100]="tabActiva === 'dispositivos'"
+                            [class.text-blue-800]="tabActiva === 'dispositivos'"
+                            [class.bg-gray-100]="tabActiva !== 'dispositivos'"
+                            [class.text-gray-600]="tabActiva !== 'dispositivos'">
+                            Puntos de Venta
+                        </span>
+                    </button>
+
+                    <!-- Tab 2: Tipos de Dispositivos -->
+                    <button
+                        type="button"
+                        role="tab"
+                        [attr.aria-selected]="tabActiva === 'tipos'"
+                        (click)="cambiarTab('tipos')"
+                        [class.border-blue-600]="tabActiva === 'tipos'"
+                        [class.text-blue-600]="tabActiva === 'tipos'"
+                        [class.border-transparent]="tabActiva !== 'tipos'"
+                        [class.text-gray-500]="tabActiva !== 'tipos'"
+                        class="group inline-flex items-center gap-2 py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        
+                        <!-- Ícono -->
+                        <i class="fas fa-tags text-lg"
+                            [class.text-blue-600]="tabActiva === 'tipos'"
+                            [class.text-gray-400]="tabActiva !== 'tipos'"></i>
+                        
+                        <!-- Texto -->
+                        <span class="font-semibold">Tipos de Dispositivos</span>
+                        
+                        <!-- Badge -->
+                        <span class="ml-2 px-2 py-0.5 text-xs font-medium rounded-full transition-colors"
+                            [class.bg-blue-100]="tabActiva === 'tipos'"
+                            [class.text-blue-800]="tabActiva === 'tipos'"
+                            [class.bg-gray-100]="tabActiva !== 'tipos'"
+                            [class.text-gray-600]="tabActiva !== 'tipos'">
+                            Catálogo
+                        </span>
+                    </button>
+
+                </nav>
+            </div>
+
+            <!-- ========================================
+                 TABS CONTENT / CONTENIDO
+            ========================================= -->
+            <div class="bg-gray-50">
+                
+                <!-- Content Tab 1: Lista de Dispositivos -->
+                <!-- ⭐ REMOVIDO [@fadeIn] - Solo usa la clase CSS -->
+                <div 
+                    *ngIf="tabActiva === 'dispositivos'"
+                    role="tabpanel"
+                    class="animate-fadeIn">
+                    <app-lista-dispositivos></app-lista-dispositivos>
+                </div>
+
+                <!-- Content Tab 2: Tipos de Dispositivos -->
+                <!-- ⭐ REMOVIDO [@fadeIn] - Solo usa la clase CSS -->
+                <div 
+                    *ngIf="tabActiva === 'tipos'"
+                    role="tabpanel"
+                    class="animate-fadeIn">
+                    <app-tipos-dispositivos></app-tipos-dispositivos>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>

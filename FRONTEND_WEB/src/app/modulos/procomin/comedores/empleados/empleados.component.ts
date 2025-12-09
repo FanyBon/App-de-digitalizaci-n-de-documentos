@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { QRCodeModule } from 'angularx-qrcode'; // Importamos la librería QR
 import { BarcodeDirective } from '../../../../shared/wrapperngx-barcode/barcode-wrapper.module'; // Importa el módulo envoltorio
-import { EmpresasService } from '../../../../services/sistemas/control_comidas/empresas.service'; // Importa el servicio de empresas
+import { EmpresasService } from '../../../../services/empresas/empresas.service'; // Importa el servicio de empresas
 import * as XLSX from 'xlsx';  // IMPORTANTE: Debe ir aquí, en el tope del archivo
 import JsBarcode from 'jsbarcode';
 import * as QRCode from 'qrcode';

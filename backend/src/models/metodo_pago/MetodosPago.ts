@@ -1,5 +1,5 @@
 // src/models/MetodosPago.ts
-import { getConnection } from '../../config/db_controlcomidas';
+import { getPool } from '../../config/db_controlcomidas';
 
 export interface MetodoPagoInterface {
   id?: number;
@@ -16,7 +16,7 @@ export interface MetodoPagoInterface {
 export class MetodoPago {
   // Listar todos los métodos de pago
   static async listar(): Promise<MetodoPagoInterface[]> {
-    const conn = await getConnection();
+    const conn = getPool('local');
     try {
       const [rows]: [any[], any] = await conn.query('SELECT * FROM metodos_pago');
       return rows;
@@ -28,7 +28,7 @@ export class MetodoPago {
 
   // Obtener un método de pago por ID
   static async obtenerPorId(id: number): Promise<MetodoPagoInterface | null> {
-    const conn = await getConnection();
+    const conn = getPool('local');
     try {
       const [rows]: [any[], any] = await conn.query('SELECT * FROM metodos_pago WHERE id = ?', [id]);
       if (rows.length === 0) return null;
@@ -41,7 +41,7 @@ export class MetodoPago {
 
   // Crear un nuevo método de pago
   static async crear(metodo: MetodoPagoInterface): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = getPool('local');
     try {
       const [result]: any = await conn.query(
         `INSERT INTO metodos_pago (nombre, codigo, comision, requiere_validacion, activo, empresa_id, created_at, updated_at)
@@ -63,7 +63,7 @@ export class MetodoPago {
     id: number,
     data: Partial<MetodoPagoInterface>
   ): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(`UPDATE metodos_pago SET ? WHERE id = ?`, [data, id]);
       if (result.affectedRows === 0) return { success: false, error: 'Método de pago no encontrado' };
@@ -76,7 +76,7 @@ export class MetodoPago {
 
   // Eliminar un método de pago
   static async eliminar(id: number): Promise<{ success: boolean; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(`DELETE FROM metodos_pago WHERE id = ?`, [id]);
       if (result.affectedRows === 0) return { success: false, error: 'Método de pago no encontrado' };

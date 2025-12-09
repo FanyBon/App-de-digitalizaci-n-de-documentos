@@ -1,4 +1,4 @@
-import { getConnection } from '../../config/db_controlcomidas';
+import { getPool } from '../../config/db_controlcomidas';
 
 export interface FamiliaProductoInterface {
   id?: number;
@@ -13,7 +13,7 @@ export interface FamiliaProductoInterface {
 export class FamiliaProducto {
   // Listar todas las familias de productos
   static async listar(): Promise<FamiliaProductoInterface[]> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [rows]: [any[], any] = await conn.query('SELECT * FROM familias_productos');
       return rows;
@@ -25,7 +25,7 @@ export class FamiliaProducto {
 
   // Obtener una familia de productos por ID
   static async obtenerPorId(id: number): Promise<FamiliaProductoInterface | null> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [rows]: [any[], any] = await conn.query('SELECT * FROM familias_productos WHERE id = ?', [id]);
       if (rows.length === 0) return null;
@@ -38,7 +38,7 @@ export class FamiliaProducto {
 
   // Crear una nueva familia de productos
   static async crear(familia: FamiliaProductoInterface): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(
         `INSERT INTO familias_productos (nombre, descripcion, parent_id, empresa_id, created_at, updated_at) 
@@ -60,7 +60,7 @@ export class FamiliaProducto {
     id: number,
     data: Partial<FamiliaProductoInterface>
   ): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(`UPDATE familias_productos SET ? WHERE id = ?`, [data, id]);
       if (result.affectedRows === 0) return { success: false, error: 'Familia de productos no encontrada' };
@@ -73,7 +73,7 @@ export class FamiliaProducto {
 
   // Eliminar una familia de productos
   static async eliminar(id: number): Promise<{ success: boolean; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(`DELETE FROM familias_productos WHERE id = ?`, [id]);
       if (result.affectedRows === 0) return { success: false, error: 'Familia de productos no encontrada' };

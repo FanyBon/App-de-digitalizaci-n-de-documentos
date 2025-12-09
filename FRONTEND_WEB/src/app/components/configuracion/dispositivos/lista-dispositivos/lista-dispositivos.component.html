@@ -1,0 +1,485 @@
+<!-- PANTALLA DE CARGA INICIAL -->
+<div *ngIf="!inicioCargaCompleto" class="flex items-center justify-center py-20">
+    <div class="text-center">
+        <div class="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600 mb-4"></div>
+        <p class="text-gray-600 text-lg font-medium">Cargando dispositivos...</p>
+        <p class="text-gray-500 text-sm mt-2">Por favor espera un momento</p>
+    </div>
+</div>
+
+<!-- CONTENIDO PRINCIPAL -->
+<div *ngIf="inicioCargaCompleto" class="p-6">
+
+    <!-- Barra de acciones -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="flex flex-col gap-4">
+
+            <!-- Fila 1: Búsqueda y botones principales -->
+            <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                
+                <!-- Búsqueda -->
+                <div class="flex-1 w-full md:w-auto">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()"
+                            placeholder="Buscar por nombre, código, ubicación o empresa..."
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    </div>
+                </div>
+
+                <!-- Botones de exportación -->
+                <div class="flex gap-2">
+                    <button (click)="exportarCSV()"
+                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center"
+                        title="Exportar a CSV">
+                        <i class="fas fa-file-csv mr-2"></i>
+                        CSV
+                    </button>
+                    <button (click)="exportarExcel()"
+                        class="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition flex items-center"
+                        title="Exportar a Excel">
+                        <i class="fas fa-file-excel mr-2"></i>
+                        Excel
+                    </button>
+                </div>
+
+                <!-- Botón Nuevo Dispositivo -->
+                <button (click)="abrirModalNuevo()"
+                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition flex items-center whitespace-nowrap">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nuevo Dispositivo
+                </button>
+            </div>
+
+            <!-- Fila 2: Filtros -->
+            <div class="flex flex-col md:flex-row gap-3 items-center flex-wrap">
+                
+                <!-- Filtros de estado -->
+                <div class="flex gap-2">
+                    <button (click)="cambiarFiltro('todos')"
+                        [class]="filtroActivo === 'todos' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-4 py-2 rounded-lg hover:opacity-90 transition text-sm">
+                        Todos ({{ dispositivos.length }})
+                    </button>
+                    <button (click)="cambiarFiltro('activos')"
+                        [class]="filtroActivo === 'activos' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-4 py-2 rounded-lg hover:opacity-90 transition text-sm">
+                        Activos
+                    </button>
+                    <button (click)="cambiarFiltro('inactivos')"
+                        [class]="filtroActivo === 'inactivos' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-4 py-2 rounded-lg hover:opacity-90 transition text-sm">
+                        Inactivos
+                    </button>
+                </div>
+
+                <!-- Filtro por tipo -->
+                <div class="flex items-center gap-2">
+                    <label class="text-sm text-gray-700 whitespace-nowrap">Tipo:</label>
+                    <select [(ngModel)]="filtroTipo" (ngModelChange)="cambiarFiltroTipo($event)"
+                        class="border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option [value]="0">Todos los tipos</option>
+                        <option *ngFor="let tipo of tiposDispositivo" [value]="tipo.id">
+                            {{ tipo.nombre }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Filtro por ubicación -->
+                <div class="flex items-center gap-2">
+                    <label class="text-sm text-gray-700 whitespace-nowrap">Ubicación:</label>
+                    <select [(ngModel)]="filtroUbicacion" (ngModelChange)="cambiarFiltroUbicacion($event)"
+                        class="border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option [value]="0">Todas las ubicaciones</option>
+                        <option *ngFor="let ubicacion of ubicaciones" [value]="ubicacion.id">
+                            {{ ubicacion.nombre }}
+                        </option>
+                    </select>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+        <p class="text-gray-600 mt-4">Cargando dispositivos...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error && !loading"
+        class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6">
+        <strong class="font-bold">Error:</strong>
+        <span class="block sm:inline ml-2">{{ error }}</span>
+    </div>
+
+    <!-- Tabla de dispositivos -->
+    <div *ngIf="!loading && !error" class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Código
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Nombre
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Tipo
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Ubicación
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Empresa
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Estado
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    <tr *ngFor="let dispositivo of dispositivosPaginados" class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="font-mono text-sm text-gray-900">{{ dispositivo.codigo }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="font-medium text-gray-900">{{ dispositivo.nombre }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <i class="fas {{ getIconoTipo(dispositivo.tipo_codigo) }} text-lg"
+                                    [style.color]="getColorTipo(dispositivo.tipo_color)"></i>
+                                <span class="text-sm">{{ dispositivo.tipo_nombre }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class="fas fa-map-marker-alt text-gray-400 mr-2"></i>
+                                <span class="text-sm text-gray-900">{{ dispositivo.ubicacion_nombre }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-gray-900">{{ dispositivo.empresa_nombre }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span
+                                [class]="dispositivo.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                {{ dispositivo.activo ? 'Activo' : 'Inactivo' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                            <div class="flex items-center justify-center gap-2">
+                                <button (click)="abrirModalEditar(dispositivo)"
+                                    class="text-blue-600 hover:text-blue-900" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button *ngIf="dispositivo.activo" (click)="desactivarDispositivo(dispositivo)"
+                                    class="text-orange-600 hover:text-orange-900" title="Desactivar">
+                                    <i class="fas fa-toggle-on"></i>
+                                </button>
+                                <button *ngIf="!dispositivo.activo" (click)="reactivarDispositivo(dispositivo)"
+                                    class="text-green-600 hover:text-green-900" title="Reactivar">
+                                    <i class="fas fa-toggle-off"></i>
+                                </button>
+                                <button *ngIf="!dispositivo.activo" (click)="eliminarPermanente(dispositivo)"
+                                    class="text-red-600 hover:text-red-900" title="Eliminar permanentemente">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Sin resultados -->
+            <div *ngIf="dispositivosFiltrados.length === 0" class="text-center py-12">
+                <i class="fas fa-inbox text-gray-400 text-6xl mb-4"></i>
+                <p class="text-gray-600 text-lg">No se encontraron dispositivos</p>
+            </div>
+        </div>
+
+        <!-- Paginación -->
+        <div *ngIf="dispositivosFiltrados.length > 0"
+            class="bg-gray-50 px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
+
+            <!-- Info de registros -->
+            <div class="text-sm text-gray-700">
+                Mostrando
+                <span class="font-semibold">{{ (paginaActual - 1) * itemsPorPagina + 1 }}</span>
+                a
+                <span class="font-semibold">{{ Math.min(paginaActual * itemsPorPagina, dispositivosFiltrados.length) }}</span>
+                de
+                <span class="font-semibold">{{ dispositivosFiltrados.length }}</span>
+                resultados
+            </div>
+
+            <!-- Selector de items por página -->
+            <div class="flex items-center gap-2">
+                <label class="text-sm text-gray-700">Mostrar:</label>
+                <select [(ngModel)]="itemsPorPagina" (ngModelChange)="cambiarItemsPorPagina($event)"
+                    class="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option *ngFor="let opcion of opcionesPaginacion" [value]="opcion">
+                        {{ opcion }}
+                    </option>
+                </select>
+            </div>
+
+            <!-- Navegación de páginas -->
+            <div *ngIf="totalPaginas > 1" class="flex items-center gap-1">
+                <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1"
+                    [class]="paginaActual === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'"
+                    class="px-3 py-1 border border-gray-300 rounded text-sm transition" title="Primera página">
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+
+                <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1"
+                    [class]="paginaActual === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'"
+                    class="px-3 py-1 border border-gray-300 rounded text-sm transition" title="Página anterior">
+                    <i class="fas fa-angle-left"></i>
+                </button>
+
+                <button *ngFor="let pagina of getPaginas()" (click)="cambiarPagina(pagina)"
+                    [class]="pagina === paginaActual ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'"
+                    class="px-3 py-1 border border-gray-300 rounded text-sm font-medium transition">
+                    {{ pagina }}
+                </button>
+
+                <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas"
+                    [class]="paginaActual === totalPaginas ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'"
+                    class="px-3 py-1 border border-gray-300 rounded text-sm transition" title="Página siguiente">
+                    <i class="fas fa-angle-right"></i>
+                </button>
+
+                <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas"
+                    [class]="paginaActual === totalPaginas ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'"
+                    class="px-3 py-1 border border-gray-300 rounded text-sm transition" title="Última página">
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL -->
+<div *ngIf="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+
+        <!-- Header del modal -->
+        <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg sticky top-0 z-10">
+            <h3 class="text-xl font-bold">
+                <i [class]="modoEdicion ? 'fas fa-edit' : 'fas fa-plus'" class="mr-2"></i>
+                {{ modoEdicion ? 'Editar Dispositivo' : 'Nuevo Dispositivo' }}
+            </h3>
+        </div>
+
+        <!-- Cuerpo del modal -->
+        <form (ngSubmit)="guardarDispositivo()" class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <!-- Nombre -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Nombre <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" [(ngModel)]="dispositivoForm.nombre" name="nombre" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ej: Caja Principal" />
+                </div>
+
+                <!-- Código -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Código <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" [(ngModel)]="dispositivoForm.codigo" name="codigo" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ej: PDV-001" />
+                </div>
+
+                <!-- Selector de Empresa -->
+                <!-- Selector de Empresa -->
+<div class="md:col-span-2">
+    <label class="block text-sm font-medium text-gray-700 mb-2">
+        Empresa <span class="text-red-500">*</span>
+    </label>
+    
+    <!-- Vista previa de empresa seleccionada -->
+    <div *ngIf="empresaSeleccionada" 
+        class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-2 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-building text-blue-600"></i>
+            <span class="font-medium text-gray-900">{{ empresaSeleccionada.nombre }}</span>
+        </div>
+        <button type="button" (click)="empresaSeleccionada = null; dispositivoForm.empresa_id = 0"
+            class="text-red-600 hover:text-red-800">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Selector con búsqueda -->
+    <div *ngIf="!empresaSeleccionada" class="dropdown-empresas relative">
+        <input type="text" [(ngModel)]="searchEmpresa" (focus)="mostrarDropdownEmpresas = true"
+            name="searchEmpresa" placeholder="Buscar empresa..."
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+
+        <div *ngIf="mostrarDropdownEmpresas"
+            class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+            <div *ngFor="let empresa of empresas | slice:0:50"
+                (click)="seleccionarEmpresa(empresa)"
+                class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-building text-gray-400"></i>
+                    <div>
+                        <p class="font-semibold text-gray-900">{{ empresa.nombre }}</p>
+                    </div>
+                </div>
+            </div>
+            <div *ngIf="empresas.length === 0" class="px-4 py-3 text-gray-500 text-center">
+                No se encontraron empresas
+            </div>
+        </div>
+    </div>
+</div>
+
+                <!-- Selector de Ubicación -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Ubicación <span class="text-red-500">*</span>
+                    </label>
+
+                    <!-- Mensaje si no hay empresa -->
+                    <div *ngIf="!empresaSeleccionada"
+                        class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-yellow-800 text-sm">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Primero selecciona una empresa
+                    </div>
+
+                    <!-- Vista previa de ubicación seleccionada -->
+                    <div *ngIf="ubicacionSeleccionada && empresaSeleccionada"
+                        class="bg-green-50 border border-green-200 rounded-lg p-3 mb-2 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-map-marker-alt text-green-600"></i>
+                            <div>
+                                <span class="font-medium text-gray-900">{{ ubicacionSeleccionada.nombre }}</span>
+                                <p class="text-xs text-gray-600">{{ ubicacionSeleccionada.codigo }}</p>
+                            </div>
+                        </div>
+                        <button type="button" (click)="ubicacionSeleccionada = null; dispositivoForm.ubicacion_id = 0"
+                            class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <!-- Selector con búsqueda -->
+                    <div *ngIf="!ubicacionSeleccionada && empresaSeleccionada" class="dropdown-ubicaciones relative">
+                        <input type="text" [(ngModel)]="searchUbicacion" (ngModelChange)="filtrarUbicaciones()"
+                            (focus)="mostrarDropdownUbicaciones = true" name="searchUbicacion"
+                            placeholder="Buscar ubicación..."
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+
+                        <div *ngIf="mostrarDropdownUbicaciones"
+                            class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                            <div *ngFor="let ubicacion of ubicacionesFiltradas | slice:0:50"
+                                (click)="seleccionarUbicacion(ubicacion)"
+                                class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-map-marker-alt text-gray-400"></i>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">{{ ubicacion.nombre }}</p>
+                                        <p class="text-xs text-gray-600">{{ ubicacion.codigo }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div *ngIf="ubicacionesFiltradas.length === 0" class="px-4 py-3 text-gray-500 text-center">
+                                No se encontraron ubicaciones
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selector de Tipo -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Tipo de Dispositivo <span class="text-red-500">*</span>
+                    </label>
+
+                    <!-- Vista previa de tipo seleccionado -->
+                    <div *ngIf="tipoSeleccionado"
+                        class="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-2 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fas {{ tipoSeleccionado.icono }} text-lg"
+                                [style.color]="tipoSeleccionado.color"></i>
+                            <span class="font-medium text-gray-900">{{ tipoSeleccionado.nombre }}</span>
+                        </div>
+                        <button type="button" (click)="tipoSeleccionado = null; dispositivoForm.tipo_id = 0"
+                            class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <!-- Selector con búsqueda -->
+                    <div *ngIf="!tipoSeleccionado" class="dropdown-tipos relative">
+                        <input type="text" [(ngModel)]="searchTipo" (ngModelChange)="filtrarTipos()"
+                            (focus)="mostrarDropdownTipos = true" name="searchTipo"
+                            placeholder="Buscar tipo de dispositivo..."
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+
+                        <div *ngIf="mostrarDropdownTipos"
+                            class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                            <div *ngFor="let tipo of tiposDispositivoFiltrados"
+                                (click)="seleccionarTipo(tipo)"
+                                class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas {{ tipo.icono }} text-lg" [style.color]="tipo.color"></i>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">{{ tipo.nombre }}</p>
+                                        <p *ngIf="tipo.descripcion" class="text-xs text-gray-600">
+                                            {{ tipo.descripcion }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div *ngIf="tiposDispositivoFiltrados.length === 0"
+                                class="px-4 py-3 text-gray-500 text-center">
+                                No se encontraron tipos
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado -->
+                <div class="md:col-span-2">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" [(ngModel)]="dispositivoForm.activo" name="activo"
+                            class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" />
+                        <span class="ml-2 text-sm font-medium text-gray-700">Dispositivo activo</span>
+                    </label>
+                </div>
+
+            </div>
+
+            <!-- Botones del modal -->
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+                <button type="button" (click)="cerrarModal()"
+                    class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                    Cancelar
+                </button>
+                <button type="submit"
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-save mr-2"></i>
+                    {{ modoEdicion ? 'Actualizar' : 'Crear' }}
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>

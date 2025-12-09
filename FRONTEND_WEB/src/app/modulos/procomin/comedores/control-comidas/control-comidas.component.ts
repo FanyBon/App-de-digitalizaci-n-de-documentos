@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy,AfterViewInit,ViewChild,ElementRef, viewChild } from '@angular/core';
-import { EmpresasService } from '../../../../services/sistemas/control_comidas/empresas.service';
+import { EmpresasService } from '../../../../services/empresas/empresas.service';
 import { EmpleadosService } from '../../../../services/sistemas/control_comidas/empleados.service';
 import { AsistenciasService } from '../../../../services/sistemas/control_comidas/asistencias.service';
 import { AuthControlComidasService } from '../../../../services/sistemas/control_comidas/auth-control-comidas.service';
@@ -61,9 +61,9 @@ export class ControlComidasComponent implements OnInit, AfterViewInit {
 
     // 1) Leer rol y empresas del usuario
     const user = this.authSvc.getUser();
-    this.role           = user.role   ?? '';
-    this.userCompanyIds = user.empresas;
-
+      this.role = user.roles[0] ?? ''; // Toma el primer rol
+  this.userCompanyIds = user.empresaId ? [user.empresaId] : [];
+  
     // 2) Cargar empresas y empleados en paralelo
     forkJoin({
       companies: this.empresasService.listarEmpresas(),

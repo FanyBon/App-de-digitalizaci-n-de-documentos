@@ -20,11 +20,17 @@ interface ReceiptVenta {
   metodo_codigo?: string;
   metodo_nombre?: string;
   cambio?: number;
+  // Añadir estas propiedades opcionales
+  efectivo_entregado?: number;
+  efectivo_recibido?: number;
+  monto_recibido?: number;
+  change?: number;
   items: ReceiptItem[];
   total_bruto: number;
   total_subsidio: number;
   total_neto: number;
 }
+
 
 
 @Injectable({ providedIn: 'root' })
@@ -138,107 +144,158 @@ export class PrinterService {
     await this.safePrint(qz.configs.create(printerName, { encoding: 'CP857', endOfReceipt: '\n\n' }), cmds);
   }
 
-  // printReceipt: crea líneas ESC/POS desde el objeto receipt y usa safePrint
-  // printReceipt: crea líneas ESC/POS desde el objeto receipt y usa safePrint
-  async printReceipt(printerName: string, receipt: {
+  // Función para imprimir ticket con formato profesional ESC/POS
+async printReceipt(
+  printerName: string,
+  receipt: {
     tipo: 'normal' | 'monedero',
-    venta: ReceiptVenta,
-    monedero?: { saldo_anterior: number, saldo_final: number }
-  }): Promise<void> {
-    await this.ensureConnection();
-
-    const config = qz.configs.create(printerName, { encoding: 'CP857', endOfReceipt: '\n\n' });
-    const v = receipt.venta;
-    const lines: { type: string; data: string }[] = [];
-
-    // Inicio y encabezado
-    lines.push({ type: 'raw', data: '\x1B\x40' });                 // Inicializar
-    lines.push({ type: 'raw', data: '\x1B\x61\x01' });             // Centrar
-
-    // Título grande y en negritas (doble ancho + doble alto + énfasis)
-    lines.push({ type: 'raw', data: '\x1B\x21\x30' });             // ESC ! 0x30 -> doble ancho+alto
-    lines.push({ type: 'raw', data: '\x1B\x45\x01PROCOMIN\n' });   // ENCENDER énfasis y texto
-    lines.push({ type: 'raw', data: '\x1B\x45\x00' });             // APAGAR énfasis
-    lines.push({ type: 'raw', data: '\x1B\x21\x00' });             // Volver a tamaño normal
-
-    // Fecha y metadatos centrados
-    lines.push({ type: 'raw', data: `Fecha: ${v.fecha ?? new Date().toLocaleString()}\n` });
-    if (v.referencia) lines.push({ type: 'raw', data: `Ref: ${v.referencia}\n` });
-    if (v.venta_id) lines.push({ type: 'raw', data: `Venta ID: ${v.venta_id}\n` });
-
-    // Empleado y Usuario (centrados)
-    if (v.empleado_nombre) lines.push({ type: 'raw', data: `Empleado: ${v.empleado_nombre}\n` });
-    if (v.usuario_nombre) lines.push({ type: 'raw', data: `Usuario: ${v.usuario_nombre}\n` });
-
-    lines.push({ type: 'raw', data: '-------------------------------\n' });
-
-    // Items: alinear a la izquierda para mejor control
-    lines.push({ type: 'raw', data: '\x1B\x61\x00' }); // Alinear izquierda
-    for (const it of v.items) {
-      const name = (it.nombre ?? '').slice(0, 20).padEnd(20, ' ');
-      const qty = String(it.cantidad).padStart(2, ' ');
-      const price = Number(it.precio_unitario ?? 0).toFixed(2).padStart(7, ' ');
-      lines.push({ type: 'raw', data: `${qty} x ${name} ${price}\n` });
-      if (it.subsidio_aplicado && it.subsidio_aplicado > 0) {
-        lines.push({ type: 'raw', data: `   Sub.: -${it.subsidio_aplicado.toFixed(2)}\n` });
-      }
-    }
-    lines.push({ type: 'raw', data: '-------------------------------\n' });
-
-    // Totales
-    lines.push({ type: 'raw', data: `TOTAL: $${Number(v.total_bruto ?? 0).toFixed(2)}\n` });
-    if (v.total_subsidio && v.total_subsidio > 0) {
-      lines.push({ type: 'raw', data: `SUBSIDIO: -$${Number(v.total_subsidio).toFixed(2)}\n` });
-    }
-    // Mostrar total a pagar en modo destacado
-    lines.push({ type: 'raw', data: '\x1B\x21\x20TOTAL A PAGAR: $' + Number(v.total_neto ?? 0).toFixed(2) + '\n' });
-
-    // Si el pago fue en efectivo y existe cambio mostrarlo
-    if (v.metodo_codigo === 'efectivo' && typeof v.cambio === 'number' && v.cambio > 0) {
-      lines.push({ type: 'raw', data: `Cambio: $${Number(v.cambio).toFixed(2)}\n` });
-    }
-
-    // Si es monedero mostrar saldos
-    if (receipt.tipo === 'monedero' && receipt.monedero) {
-      lines.push({ type: 'raw', data: '-------------------------------\n' });
-      lines.push({ type: 'raw', data: `Saldo ant: $${Number(receipt.monedero.saldo_anterior ?? 0).toFixed(2)}\n` });
-      lines.push({ type: 'raw', data: `Saldo act: $${Number(receipt.monedero.saldo_final ?? 0).toFixed(2)}\n` });
-    }
-
-    // Método de pago (si existe)
-    if (v.metodo_nombre) {
-      lines.push({ type: 'raw', data: `Pago: ${v.metodo_nombre}\n` });
-    }
-
-    // Mensaje final — asegurar que quede en una sola línea y sin cortes internos
-    const thankYou = 'Gracias por su compra';
-    const maxLine = 32; // ancho típico del rollo; ajustar si tu impresora usa más/menos
-    const cleanThankYou = thankYou.replace(/\s+/g, ' ').trim(); // asegurar un solo espacio
-    // Si es más largo que ancho, dividir en piezas sin cortar palabras
-    if (cleanThankYou.length <= maxLine) {
-      lines.push({ type: 'raw', data: cleanThankYou + '\n' });
-    } else {
-      const words = cleanThankYou.split(' ');
-      let lineAcc = '';
-      for (const w of words) {
-        if ((lineAcc + ' ' + w).trim().length <= maxLine) {
-          lineAcc = (lineAcc + ' ' + w).trim();
-        } else {
-          lines.push({ type: 'raw', data: lineAcc + '\n' });
-          lineAcc = w;
-        }
-      }
-      if (lineAcc) lines.push({ type: 'raw', data: lineAcc + '\n' });
-    }
-
-    // Algunos saltos para separación física antes del corte
-    lines.push({ type: 'raw', data: '\n\n\n\n\n\n' });
-
-    // Corte y cajón
-    lines.push({ type: 'raw', data: '\x1D\x56\x01' });             // Corte parcial
-    lines.push({ type: 'raw', data: '\x1B\x70\x00\x64\x64' });     // Pulso al cajón
-
-    console.log('PrinterService.printReceipt: enviando a impresora', printerName, 'líneas:', lines.length);
-    await this.safePrint(config, lines);
+    venta: {
+      fecha?: string;
+      referencia?: string;
+      venta_id?: number;
+      empleado_nombre?: string | null;
+      usuario_nombre?: string | null;
+      items: Array<{ nombre: string; descripcion?: string; cantidad: number; precio_unitario: number; subsidio_aplicado?: number }>;
+      total_bruto?: number;
+      total_subsidio?: number;
+      total_neto?: number;
+      metodo_codigo?: string;
+      metodo_nombre?: string;
+      cambio?: number;
+      efectivo_entregado?: number;
+    },
+    monedero?: { saldo_anterior: number; saldo_final: number }
   }
+): Promise<void> {
+
+  await this.ensureConnection();
+
+  const config = qz.configs.create(printerName, {
+    encoding: 'CP857',
+    endOfReceipt: '\n\n'
+  });
+
+  const v = receipt.venta || ({} as any);
+  const lines: { type: string; data: string }[] = [];
+  const fmt = (n: any) => Number(n || 0).toFixed(2);
+  const WIDTH = 32; // ancho típico de 58mm
+
+  // === Helpers ===
+  const lineWithRight = (left: string, right: string) => {
+    const l = left.trim();
+    const r = right.trim();
+    const space = Math.max(1, WIDTH - l.length - r.length);
+    return l + ' '.repeat(space) + r;
+  };
+
+  const centerText = (text: string) => {
+    const t = text.trim();
+    const leftPad = Math.floor((WIDTH - t.length) / 2);
+    return ' '.repeat(Math.max(0, leftPad)) + t + '\n';
+  };
+
+  // === ENCABEZADO ===
+  lines.push({ type: 'raw', data: '\x1B\x40' }); // init
+  lines.push({ type: 'raw', data: '\x1B\x61\x01' }); // centrar
+  lines.push({ type: 'raw', data: '\x1B\x21\x30\x1B\x45\x01' }); // grande + negrita
+  lines.push({ type: 'raw', data: 'PROCOMIN\n' });
+  lines.push({ type: 'raw', data: '\x1B\x21\x00\x1B\x45\x00' }); // normal
+  lines.push({ type: 'raw', data: centerText('Profesionales en Comidas Industriales') });
+  lines.push({ type: 'raw', data: '--------------------------------\n' });
+
+  // === METADATOS ===
+  lines.push({ type: 'raw', data: '\x1B\x61\x00' }); // izquierda
+  lines.push({ type: 'raw', data: `Fecha: ${v.fecha ?? new Date().toLocaleString()}\n` });
+  if (v.referencia) lines.push({ type: 'raw', data: `Referencia: ${v.referencia}\n` });
+  if (v.venta_id) lines.push({ type: 'raw', data: `Venta ID: ${v.venta_id}\n` });
+  if (v.empleado_nombre) lines.push({ type: 'raw', data: `Empleado: ${v.empleado_nombre}\n` });
+  if (v.usuario_nombre) lines.push({ type: 'raw', data: `Usuario: ${v.usuario_nombre}\n` });
+  lines.push({ type: 'raw', data: '--------------------------------\n' });
+
+  // === ITEMS ===
+  lines.push({ type: 'raw', data: 'CANT DESCRIPCIÓN IMPORTE\n' });
+  lines.push({ type: 'raw', data: '--------------------------------\n' });
+
+  for (const it of v.items || []) {
+    // corregir nombres tipo "Producto 24"
+    let name = (it.nombre ?? '').trim();
+    if (/^producto\s*\d*$/i.test(name) && it.descripcion) {
+      name = it.descripcion;
+    }
+    if (!name || name === '') name = 'SIN DESCRIPCIÓN';
+
+    const qty = String(it.cantidad ?? 0).padStart(2, ' ');
+    const shortName = name.slice(0, 18).padEnd(18, ' ');
+    const price = fmt(it.precio_unitario).padStart(7, ' ');
+    lines.push({ type: 'raw', data: `${qty}x ${shortName}${price}\n` });
+
+    if (it.subsidio_aplicado && it.subsidio_aplicado > 0) {
+      lines.push({ type: 'raw', data: ` Subsidio: -${fmt(it.subsidio_aplicado)}\n` });
+    }
+  }
+
+  // === TOTALES ===
+  lines.push({ type: 'raw', data: '--------------------------------\n' });
+  lines.push({ type: 'raw', data: lineWithRight('Subtotal:', `$${fmt(v.total_bruto)}`) + '\n' });
+
+  if (v.total_subsidio && v.total_subsidio > 0) {
+    lines.push({ type: 'raw', data: lineWithRight('Subsidio:', `-$${fmt(v.total_subsidio)}`) + '\n' });
+  }
+
+  // TOTAL centrado en grande
+  lines.push({ type: 'raw', data: '\x1B\x61\x01' }); // centrar
+  lines.push({ type: 'raw', data: '\x1B\x21\x30' }); // grande
+  lines.push({ type: 'raw', data: `TOTAL A PAGAR\n$${fmt(v.total_neto)}\n` });
+  lines.push({ type: 'raw', data: '\x1B\x21\x00' });
+  lines.push({ type: 'raw', data: '\x1B\x61\x00' }); // volver a izquierda
+
+  // === MÉTODO DE PAGO ===
+  const metodoNombre = (v.metodo_nombre ?? v.metodo_codigo ?? 'DESCONOCIDO').toString();
+  lines.push({ type: 'raw', data: '\n' + lineWithRight('Método de pago:', metodoNombre) + '\n' });
+
+  // === EFECTIVO ===
+  if (String(v.metodo_codigo ?? metodoNombre).toLowerCase() === 'efectivo') {
+    const recibidoRaw = v.efectivo_entregado ?? (v as any).efectivo_recibido ?? (v as any).monto_recibido ?? null;
+    const recibido = (recibidoRaw !== null && recibidoRaw !== undefined) ? Number(recibidoRaw) : NaN;
+    const cambioRaw = v.cambio ?? (v as any).change ?? null;
+    let cambio = (cambioRaw !== null && cambioRaw !== undefined) ? Number(cambioRaw) : NaN;
+    if (Number.isNaN(cambio) && !Number.isNaN(recibido) && !Number.isNaN(Number(v.total_neto))) {
+      const calc = recibido - Number(v.total_neto);
+      cambio = Number.isFinite(calc) ? Number(calc.toFixed(2)) : NaN;
+    }
+    if (!Number.isNaN(recibido)) {
+      lines.push({ type: 'raw', data: lineWithRight('Efectivo:', `$${fmt(recibido)}`) + '\n' });
+    }
+    if (!Number.isNaN(cambio)) {
+      lines.push({ type: 'raw', data: lineWithRight('Cambio:', `$${fmt(cambio)}`) + '\n' });
+    }
+  }
+
+  // === MONEDERO ===
+  if (String(v.metodo_codigo ?? metodoNombre).toLowerCase() === 'monedero') {
+    const salAnt = receipt.monedero?.saldo_anterior ?? (v as any).monedero_saldo_anterior ?? 0;
+    const salAct = receipt.monedero?.saldo_final ?? (v as any).monedero_saldo_actual ?? 0;
+    lines.push({ type: 'raw', data: '--------------------------------\n' });
+    lines.push({ type: 'raw', data: lineWithRight('Saldo anterior:', `$${fmt(salAnt)}`) + '\n' });
+    lines.push({ type: 'raw', data: lineWithRight('Saldo actual:', `$${fmt(salAct)}`) + '\n' });
+  }
+
+  // === PIE FINAL ===
+  lines.push({ type: 'raw', data: '\n\n' });
+  lines.push({ type: 'raw', data: centerText('www.halucar.es') });
+  lines.push({ type: 'raw', data: '\n\n\n\n' });
+
+  // === CORTE FINAL ===
+  lines.push({ type: 'raw', data: '\x1D\x56\x01' }); // corte parcial al final
+  lines.push({ type: 'raw', data: '\x1B\x70\x00\x64\x64' }); // pulso gaveta
+
+  // === ENVÍO A IMPRESORA ===
+  console.log('PrinterService.printReceipt: enviando a impresora', printerName, 'líneas:', lines.length);
+  await this.safePrint(config, lines);
+}
+
+
+
+
+  
 }

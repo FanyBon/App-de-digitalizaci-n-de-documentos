@@ -1,4 +1,4 @@
-import { getConnection } from '../../config/db_controlcomidas';
+import { getPool } from '../../config/db_controlcomidas';
 
 export interface SubsidioUtilizadoInterface {
   id?: number;
@@ -13,7 +13,7 @@ export interface SubsidioUtilizadoInterface {
 export class SubsidioUtilizado {
   // Listar todos los subsidios utilizados
   static async listar(): Promise<SubsidioUtilizadoInterface[]> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [rows]: [any[], any] = await conn.query('SELECT * FROM subsidios_utilizados');
       return rows;
@@ -25,7 +25,7 @@ export class SubsidioUtilizado {
 
   // Obtener un subsidio utilizado por ID
   static async obtenerPorId(id: number): Promise<SubsidioUtilizadoInterface | null> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [rows]: [any[], any] = await conn.query('SELECT * FROM subsidios_utilizados WHERE id = ?', [id]);
       if (rows.length === 0) return null;
@@ -38,7 +38,7 @@ export class SubsidioUtilizado {
 
   // Crear un nuevo subsidio utilizado
   static async crear(subsidioUtilizado: SubsidioUtilizadoInterface): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(
         `INSERT INTO subsidios_utilizados (empleado_id, fecha, monto_subsidio, venta_id, producto_id, created_at) 
@@ -58,7 +58,7 @@ export class SubsidioUtilizado {
 
   // Editar un subsidio utilizado
   static async editar(id: number, data: Partial<SubsidioUtilizadoInterface>): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(`UPDATE subsidios_utilizados SET ? WHERE id = ?`, [data, id]);
       if (result.affectedRows === 0) return { success: false, error: 'Subsidio utilizado no encontrado' };
@@ -71,7 +71,7 @@ export class SubsidioUtilizado {
 
   // Eliminar un subsidio utilizado
   static async eliminar(id: number): Promise<{ success: boolean; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(`DELETE FROM subsidios_utilizados WHERE id = ?`, [id]);
       if (result.affectedRows === 0) return { success: false, error: 'Subsidio utilizado no encontrado' };

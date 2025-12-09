@@ -1,0 +1,58 @@
+/* src/app/components/configuracion/permisos/perfil-modulos/perfil-modulos.component.css */
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Icono rotado */
+.fa-rotate-90 {
+    transform: rotate(90deg);
+    display: inline-block;
+}
+
+/* Scrollbar personalizado */
+.overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #f97316 #f3f4f6;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #f97316;
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #ea580c;
+}
+
+/* Transiciones suaves */
+button, div[class*="cursor-pointer"] {
+    transition: all 0.2s ease;
+}
+
+/* Hover en items */
+div[class*="cursor-pointer"]:hover {
+    transform: translateX(4px);
+}
+
+/* Focus en input */
+input:focus {
+    outline: none;
+}

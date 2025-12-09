@@ -1,0 +1,89 @@
+<!-- src/app/components/configuracion/usuarios/usuarios.component.html -->
+<div class="container mx-auto p-6">
+
+  <!-- ============================================ -->
+  <!-- ENCABEZADO -->
+  <!-- ============================================ -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">
+      <i class="fas fa-users mr-2 text-blue-600"></i>
+      Gestión de Usuarios
+    </h1>
+    <p class="text-gray-600">Administra los usuarios del sistema PROCOMIN</p>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- TABS DE NAVEGACIÓN -->
+  <!-- ============================================ -->
+  <div class="bg-white rounded-lg shadow-md mb-6">
+    <div class="border-b border-gray-200">
+      <nav class="flex -mb-px">
+
+        <!-- Tab: Lista de Usuarios -->
+        <button (click)="cambiarTab('lista')" [class]="esTabActiva('lista') 
+            ? 'border-blue-600 text-blue-600' 
+            : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'"
+          class="py-4 px-6 border-b-2 font-medium transition">
+          <i class="fas fa-list mr-2"></i>
+          Lista de Usuarios
+        </button>
+
+        <!-- Tab: Estadísticas -->
+        <button (click)="cambiarTab('estadisticas')"
+          [class]="esTabActiva('estadisticas') ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'"
+          class="py-4 px-6 border-b-2 font-medium transition">
+          <i class="fas fa-chart-line mr-2"></i>
+          Estadísticas
+        </button>
+        
+        <!-- Tab: Roles -->
+        <button (click)="cambiarTab('roles')"
+          [class]="esTabActiva('roles') ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'"
+          class="py-4 px-6 border-b-2 font-medium transition">
+          <i class="fas fa-user-shield mr-2"></i>
+          Roles
+        </button>
+
+        <!-- Tab: Perfiles -->
+        <button (click)="cambiarTab('perfiles')"
+          [class]="esTabActiva('perfiles') ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'"
+          class="py-4 px-6 border-b-2 font-medium transition">
+          <i class="fas fa-id-card mr-2"></i>
+          Perfiles
+        </button>
+
+        <!-- Tab: Asignar Ubicaciones -->
+        <button (click)="cambiarTab('ubicaciones')"
+          [class]="esTabActiva('ubicaciones') ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'"
+          class="py-4 px-6 border-b-2 font-medium transition">
+          <i class="fas fa-map-marked-alt mr-2"></i>
+          Asignar Ubicaciones
+        </button>
+
+      </nav>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- CONTENIDO DE LOS TABS -->
+  <!-- ============================================ -->
+  <div class="tab-content">
+
+    <!-- Tab: Lista de Usuarios -->
+    <app-lista-usuarios *ngIf="esTabActiva('lista')"></app-lista-usuarios>
+
+    <!-- Tab: Estadísticas -->
+    <app-estadisticas *ngIf="esTabActiva('estadisticas')"></app-estadisticas>
+
+    <!-- Tab: Roles -->
+    <app-lista-roles *ngIf="esTabActiva('roles')"></app-lista-roles>
+
+    <!-- Tab: Perfiles -->
+    <app-lista-perfiles *ngIf="esTabActiva('perfiles')"></app-lista-perfiles>
+    
+    <!-- Tab: Asignar Ubicaciones -->
+    <app-asignar-ubicaciones *ngIf="esTabActiva('ubicaciones')"></app-asignar-ubicaciones>
+
+  </div>
+
+</div>

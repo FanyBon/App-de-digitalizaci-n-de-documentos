@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 export interface Role {
   id: number;
   nombre: string;
+  es_sistema?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })

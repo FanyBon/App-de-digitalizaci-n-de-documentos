@@ -1,5 +1,6 @@
 // src/models/Recarga.ts
-import { getConnection } from '../../config/db_controlcomidas';
+import { Pool } from 'mysql2/typings/mysql/lib/Pool';
+import { getPool, getConnection } from '../../config/db_controlcomidas';
 
 export interface RecargaInterface {
   id?: number;
@@ -13,9 +14,9 @@ export interface RecargaInterface {
 export class Recarga {
   // Listar todas las recargas
   static async listar(): Promise<RecargaInterface[]> {
-    const conn = await getConnection();
+    const Pool = await getPool('local');
     try {
-      const [rows]: [any[], any] = await conn.query('SELECT * FROM recargas');
+      const [rows]: [any[], any] = await Pool.query('SELECT * FROM recargas');
       return rows;
     } catch (error) {
       console.error('Error al listar recargas:', error);
@@ -25,7 +26,7 @@ export class Recarga {
 
   // Obtener una recarga por ID
   static async obtenerPorId(id: number): Promise<RecargaInterface | null> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [rows]: [any[], any] = await conn.query('SELECT * FROM recargas WHERE id = ?', [id]);
       if (rows.length === 0) return null;
@@ -38,7 +39,7 @@ export class Recarga {
 
   // Crear una nueva recarga y actualizar el saldo del monedero
   static async crear(recarga: RecargaInterface): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local').getConnection();
     try {
       // Iniciamos la transacción
       await conn.beginTransaction();
@@ -79,6 +80,9 @@ export class Recarga {
       console.error('Error al crear recarga y actualizar monedero:', error);
       return { success: false, error: 'Error al crear la recarga y actualizar el monedero' };
     }
+    finally {
+      try { conn.release(); } catch (e) { console.warn('Error liberando conexión en crear recarga', e); }
+    }
   }
 
   // Editar una recarga existente
@@ -86,7 +90,7 @@ export class Recarga {
     id: number,
     data: Partial<RecargaInterface>
   ): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = getPool('local');
     try {
       const [result]: any = await conn.query(`UPDATE recargas SET ? WHERE id = ?`, [data, id]);
       if (result.affectedRows === 0) return { success: false, error: 'Recarga no encontrada' };
@@ -99,7 +103,7 @@ export class Recarga {
 
   // Eliminar una recarga
   static async eliminar(id: number): Promise<{ success: boolean; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(`DELETE FROM recargas WHERE id = ?`, [id]);
       if (result.affectedRows === 0) return { success: false, error: 'Recarga no encontrada' };

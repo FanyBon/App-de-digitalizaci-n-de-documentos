@@ -5,12 +5,9 @@
     <div class="mb-4 flex justify-between items-center">
       <h1 class="text-2xl font-bold">Catálogo de Productos</h1>
       <div class="relative">
-        <input
-          type="text"
-          placeholder="Buscar producto..."
+        <input type="text" placeholder="Buscar producto..."
           class="pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300"
-          [(ngModel)]="searchTerm"
-        />
+          [(ngModel)]="searchTerm" />
         <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
       </div>
     </div>
@@ -18,27 +15,44 @@
     <!-- =================== SECCIÓN: CATEGORÍAS (FAMILIAS) =================== -->
     <div class="mb-4">
       <h2 class="text-xl font-semibold">Categorías</h2>
-      <div class="flex space-x-2 mt-2">
-        <!-- Botón para ver "Todos" -->
-        <button
-          class="px-3 py-1 border rounded focus:outline-none"
-          [ngClass]="{'bg-pink-500 text-white': selectedFamily === null}"
-          (click)="selectFamily(null)"
-        >
-          Todos
-        </button>
-        <!-- Botón para cada familia -->
-        <button
-          *ngFor="let familia of familias"
-          class="px-3 py-1 border rounded focus:outline-none"
-          [ngClass]="{'bg-blue-500 text-white': selectedFamily === familia.id}"
-          (click)="selectFamily(familia.id)"
-        >
-          {{ familia.nombre }}
-        </button>
+
+      <!-- Contenedor con límite de alto y scroll horizontal en pantallas pequeñas -->
+      <div class="mt-2 bg-white rounded border p-2
+           overflow-hidden
+           sm:overflow-visible
+           ">
+        <!-- Línea superior: scroll horizontal en xs, layout en grid/flex en sm+ -->
+        <div class="flex gap-2 items-center
+             overflow-x-auto whitespace-nowrap
+             sm:flex-wrap sm:overflow-visible
+             px-1 py-1 -mx-1">
+          <!-- Botón para ver "Todos" -->
+          <button class="inline-block px-3 py-1 border rounded focus:outline-none flex-shrink-0
+               transition-colors duration-150
+               hover:bg-pink-100"
+            [ngClass]="{'bg-pink-500 text-white': selectedFamily === null, 'bg-white text-gray-700': selectedFamily !== null}"
+            (click)="selectFamily(null)">
+            Todos
+          </button>
+
+          <!-- Botón para cada familia -->
+          <button *ngFor="let familia of familias" class="inline-block px-3 py-1 border rounded focus:outline-none flex-shrink-0
+               transition-colors duration-150
+               hover:bg-blue-50"
+            [ngClass]="{'bg-blue-500 text-white': selectedFamily === familia.id, 'bg-white text-gray-700': selectedFamily !== familia.id}"
+            (click)="selectFamily(familia.id)">
+            {{ familia.nombre }}
+          </button>
+        </div>
+
+        <!-- Opcional: segunda fila para pantallas grandes (evita overflow vertical) -->
+        <div class="hidden sm:block mt-2">
+          <!-- aquí puedes renderizar filtros adicionales u otro contenido -->
+        </div>
       </div>
     </div>
-    
+
+
     <!-- =================== GRILLA DE PRODUCTOS =================== -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       <div *ngFor="let product of filteredProducts()" class="bg-white shadow p-4 rounded-lg border">
@@ -46,10 +60,8 @@
         <p class="text-gray-600 mt-1">
           Precio: ${{ product.precio_venta | number:'1.2-2' }} <br>
         </p>
-        <button
-          class="mt-2 w-full bg-blue-500 text-white py-1 rounded hover:bg-blue-600 transition-colors"
-          (click)="addToCart(product)"
-        >
+        <button class="mt-2 w-full bg-blue-500 text-white py-1 rounded hover:bg-blue-600 transition-colors"
+          (click)="addToCart(product)">
           <i class="fas fa-cart-plus mr-2"></i> Agregar
         </button>
       </div>
@@ -57,169 +69,232 @@
   </div>
 
   <!-- =================== CONTENEDOR: RESUMEN DE VENTA =================== -->
-<div class="w-1/3 p-4 bg-gray-100 border-l border-gray-200">
-  <h1 class="text-2xl font-bold mb-4">Resumen de la Venta</h1>
-  
-  <!-- Lista de Artículos en el Carrito -->
-  <div class="flex flex-col space-y-2 overflow-auto h-64 border p-2 rounded bg-white">
-    <div *ngFor="let item of cart" class="flex items-center justify-between border-b pb-2">
-      <div>
-        <span class="font-medium">{{ item.nombre }}</span>
-        <!-- Controles de cantidad -->
-        <div class="flex items-center space-x-2 mt-1">
-          <!-- Botón para disminuir -->
-          <button
-            class="px-2 py-1 border rounded hover:bg-gray-200"
-            (click)="decreaseQuantity(item)"
-          >−</button>
-          <span class="text-sm">{{ item.cantidad }}</span>
-          <!-- Botón para aumentar -->
-          <button
-            class="px-2 py-1 border rounded hover:bg-gray-200"
-            (click)="increaseQuantity(item)"
-          >+</button>
+  <div class="w-1/3 p-4 bg-gray-100 border-l border-gray-200">
+    <h1 class="text-2xl font-bold mb-4">Resumen de la Venta</h1>
+
+    <!-- Lista de Artículos en el Carrito -->
+    <div class="flex flex-col space-y-2 overflow-auto h-64 border p-2 rounded bg-white">
+      <div *ngFor="let item of cart" class="flex items-center justify-between border-b pb-2">
+        <div>
+          <span class="font-medium">{{ item.nombre }}</span>
+          <!-- Controles de cantidad -->
+          <div class="flex items-center space-x-2 mt-1">
+            <!-- Botón para disminuir -->
+            <button class="px-2 py-1 border rounded hover:bg-gray-200" (click)="decreaseQuantity(item)">−</button>
+            <span class="text-sm">{{ item.cantidad }}</span>
+            <!-- Botón para aumentar -->
+            <button class="px-2 py-1 border rounded hover:bg-gray-200" (click)="increaseQuantity(item)">+</button>
+          </div>
+        </div>
+        <div class="flex items-center">
+          <span class="font-semibold mr-2">
+            $ {{ (item.precio_venta * item.cantidad) | number:'1.2-2' }}
+          </span>
+          <!-- Botón para eliminar el producto del carrito -->
+          <button class="text-red-600 hover:text-red-800" (click)="removeFromCart(item)">
+            <i class="fas fa-trash"></i>
+          </button>
         </div>
       </div>
-      <div class="flex items-center">
-        <span class="font-semibold mr-2">
-          $ {{ (item.precio_venta * item.cantidad) | number:'1.2-2' }}
-        </span>
-        <!-- Botón para eliminar el producto del carrito -->
-        <button
-          class="text-red-600 hover:text-red-800"
-          (click)="removeFromCart(item)"
-        >
-          <i class="fas fa-trash"></i>
-        </button>
+      <p *ngIf="!cart.length" class="text-gray-500 text-center">
+        Carrito vacío.
+      </p>
+    </div>
+
+    <!-- Sección de Totales -->
+    <div class="mt-4 p-4 border rounded bg-white">
+      <p>
+        <strong>Total de productos:</strong>
+        ${{ transactionTotal | number:'1.2-2' }}
+      </p>
+      <!-- Se muestra el descuento solo si es mayor a 0 -->
+      <p *ngIf="subsidioTotal > 0">
+        <strong>Descuento aplicado:</strong>
+        - ${{ subsidioTotal | number:'1.2-2' }}
+      </p>
+      <p>
+        <strong>Total a pagar:</strong>
+        ${{ netTotal | number:'1.2-2' }}
+      </p>
+    </div>
+
+
+    <!-- --- Botón para iniciar el proceso de pago --- -->
+    <button class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition-colors"
+      (click)="openSaleTypeModal()" [disabled]="!cart.length">
+      <i class="fas fa-dollar-sign mr-2"></i> Procesar Pago
+    </button>
+
+    <!-- =================== MODAL: SELECCIÓN DE TIPO DE VENTA =================== -->
+    <div *ngIf="showSaleTypeModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-white p-6 rounded w-80">
+        <h3 class="text-lg font-semibold mb-4">Seleccionar tipo de venta</h3>
+        <button class="w-full bg-gray-300 py-2 rounded mb-2" (click)="processVentaNormal()">Venta Normal</button>
+        <button class="w-full bg-blue-500 text-white py-2 rounded" (click)="chooseVentaPorMonedero()">Venta por
+          Monedero</button>
+        <button class="w-full mt-2 text-red-600" (click)="closeModals()">Cancelar</button>
       </div>
     </div>
-    <p *ngIf="!cart.length" class="text-gray-500 text-center">
-      Carrito vacío.
-    </p>
-  </div>
 
-  <!-- Sección de Totales -->
-<div class="mt-4 p-4 border rounded bg-white">
-  <p>
-    <strong>Total de productos:</strong>
-    ${{ transactionTotal | number:'1.2-2' }}
-  </p>
-  <!-- Se muestra el descuento solo si es mayor a 0 -->
-  <p *ngIf="subsidioTotal > 0">
-    <strong>Descuento aplicado:</strong>
-    - ${{ subsidioTotal | number:'1.2-2' }}
-  </p>
-  <p>
-    <strong>Total a pagar:</strong>
-    ${{ netTotal | number:'1.2-2' }}
-  </p>
-</div>
-
-  
-<!-- --- Botón para iniciar el proceso de pago --- -->
-<button class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition-colors"
-  (click)="openSaleTypeModal()"
-  [disabled]="!cart.length">
-  <i class="fas fa-dollar-sign mr-2"></i> Procesar Pago
-</button>
-
-<!-- =================== MODAL: SELECCIÓN DE TIPO DE VENTA =================== -->
-<div *ngIf="showSaleTypeModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-  <div class="bg-white p-6 rounded w-80">
-    <h3 class="text-lg font-semibold mb-4">Seleccionar tipo de venta</h3>
-    <button class="w-full bg-gray-300 py-2 rounded mb-2" (click)="processVentaNormal()">Venta Normal</button>
-    <button class="w-full bg-blue-500 text-white py-2 rounded" (click)="chooseVentaPorMonedero()">Venta por Monedero</button>
-    <button class="w-full mt-2 text-red-600" (click)="closeModals()">Cancelar</button>
-  </div>
-</div>
-
-<!-- =================== MODAL: ESCANEO DEL EMPLEADO =================== -->
-<!-- Modal de Escaneo del Empleado -->
-<div *ngIf="showScanModal && isVentaMonedero" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-  <div class="bg-white p-6 rounded w-80">
-    <h3 class="text-lg font-semibold mb-4">Escanear código del empleado</h3>
-    <input type="text" [(ngModel)]="scanCode" placeholder="Código de barras / QR" class="border p-2 w-full mb-4">
-    <button class="w-full bg-green-500 text-white py-2 rounded" (click)="scanEmployee()">Buscar</button>
-    <button class="w-full mt-2 text-red-600" (click)="closeModals()">Cancelar</button>
-  </div>
-</div>
-
-
-<!-- =================== MODAL: RESUMEN DE LA TRANSACCIÓN =================== -->
-<div *ngIf="showTransactionSummaryModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-  <div class="bg-white p-6 rounded w-96">
-    <h3 class="text-lg font-semibold mb-4">Resumen de la Transacción</h3>
-    <p><strong>Empleado:</strong> {{ empleado?.nombre }}</p>
-    <p><strong>Saldo Monedero:</strong> ${{ empleado?.monedero?.saldo }}</p>
-    <p><strong>Total productos:</strong> ${{ transactionTotal | number:'1.2-2' }}</p>
-    <p><strong>Subsidios:</strong> ${{ subsidioTotal | number:'1.2-2' }}</p>
-    <p><strong>Total a pagar:</strong> ${{ netTotal | number:'1.2-2' }}</p>
-    <button class="w-full bg-green-600 text-white py-2 rounded mt-4" (click)="confirmMonederoPayment()">Confirmar Pago</button>
-    <button class="w-full mt-2 text-red-600" (click)="closeModals()">Cancelar</button>
-  </div>
-</div>
-
-
-
-
-<!-- Modal de Métodos de Pago -->
-<div *ngIf="showPaymentMethodModal && !isVentaMonedero" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-  <div class="bg-white p-6 rounded w-96">
-    <h3 class="text-lg font-semibold mb-4">Selecciona el Método de Pago</h3>
-    <!-- Botones generados dinámicamente -->
-    <div class="flex flex-col space-y-2">
-      <button
-        *ngFor="let metodo of metodosPago"
-        class="w-full bg-blue-500 text-white py-2 rounded"
-        (click)="seleccionarMetodoPago(metodo)"
-      >
-        {{ metodo.nombre }}
-      </button>
+    <!-- =================== MODAL: ESCANEO DEL EMPLEADO =================== -->
+    <!-- Modal de Escaneo del Empleado -->
+    <div *ngIf="showScanModal && isVentaMonedero"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-white p-6 rounded w-80">
+        <h3 class="text-lg font-semibold mb-4">Escanear código del empleado</h3>
+        <input type="text" [(ngModel)]="scanCode" placeholder="Código de barras / QR" class="border p-2 w-full mb-4">
+        <button class="w-full bg-green-500 text-white py-2 rounded" (click)="scanEmployee()">Buscar</button>
+        <button class="w-full mt-2 text-red-600" (click)="closeModals()">Cancelar</button>
+      </div>
     </div>
-    <button class="w-full mt-2 text-red-600" (click)="closeModals()">Cancelar</button>
-  </div>
-</div>
 
-<!-- Modal de Pago en Efectivo -->
-<div *ngIf="selectedMetodoPago && selectedMetodoPago.codigo === 'efectivo' && !isVentaMonedero" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-  <div class="bg-white p-6 rounded w-96">
-    <h3 class="text-lg font-semibold mb-4">Pago en Efectivo</h3>
-    <p><strong>Total a Pagar:</strong> ${{ transactionTotal | number:'1.2-2' }}</p>
-    <!-- Input readonly para ver el monto ingresado -->
-    <input type="text" class="border p-2 w-full text-right" [value]="montoRecibido" readonly placeholder="Ingrese el monto" />
-    <!-- Teclado numérico -->
-    <div class="grid grid-cols-3 gap-2 mt-2">
-      <button class="bg-gray-200 p-2" (click)="ingresaNumero('7')">7</button>
-      <button class="bg-gray-200 p-2" (click)="ingresaNumero('8')">8</button>
-      <button class="bg-gray-200 p-2" (click)="ingresaNumero('9')">9</button>
-      <button class="bg-gray-200 p-2" (click)="ingresaNumero('4')">4</button>
-      <button class="bg-gray-200 p-2" (click)="ingresaNumero('5')">5</button>
-      <button class="bg-gray-200 p-2" (click)="ingresaNumero('6')">6</button>
-      <button class="bg-gray-200 p-2" (click)="ingresaNumero('1')">1</button>
-      <button class="bg-gray-200 p-2" (click)="ingresaNumero('2')">2</button>
-      <button class="bg-gray-200 p-2" (click)="ingresaNumero('3')">3</button>
-      <button class="bg-gray-200 p-2 col-span-2" (click)="ingresaNumero('0')">0</button>
-      <button class="bg-red-300 p-2" (click)="borrar()">Borrar</button>
+
+    <!-- =================== MODAL: RESUMEN DE LA TRANSACCIÓN (actualizado) =================== -->
+    <div *ngIf="showTransactionSummaryModal"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-white p-6 rounded w-96 shadow-lg">
+        <h3 class="text-xl font-semibold mb-3">Resumen de la Transacción</h3>
+
+        <p class="mb-1"><strong>Empleado:</strong> {{ empleado?.nombre }}</p>
+        <p class="mb-1"><strong>Saldo Monedero:</strong> ${{ preview?.saldo_monedero ?? empleado?.monedero?.saldo |
+          number:'1.2-2' }}</p>
+
+        <hr class="my-2" />
+
+        <p class="mb-1"><strong>Total productos:</strong> ${{ preview?.total_bruto ?? transactionTotal | number:'1.2-2'
+          }}</p>
+
+        <div *ngIf="preview" class="mt-1">
+          <div *ngIf="hasSubsidioPreview()" class="mb-1">
+            <p class="text-sm text-green-700"><strong>Subsidio estimado:</strong> ${{ preview.subsidio_estimado |
+              number:'1.2-2' }}</p>
+            <p class="text-xs text-gray-500">Subs. disponibles hoy: {{ preview.subsidios_restantes_count }}</p>
+          </div>
+
+          <div *ngIf="!hasSubsidioPreview()" class="mb-1">
+            <p class="text-sm text-red-600"><strong>No aplica subsidio</strong></p>
+          </div>
+        </div>
+
+        <!-- detalle por producto: usa helper para traer nombre y subsidio por item -->
+        <div class="mt-2 text-sm">
+          <div *ngFor="let it of getPreviewItemsForDisplay()" class="mb-2">
+            <div class="flex justify-between items-baseline">
+              <div class="font-medium">{{ it.nombre }} x{{ it.cantidad }}</div>
+              <div class="text-right">${{ it.precio_unit | number:'1.2-2' }}</div>
+            </div>
+            <div *ngIf="it.aplica_subsidio && (it.subsidio_aplicado_total > 0)" class="text-green-700 text-xs">
+              Subsidio aplicado: ${{ it.subsidio_aplicado_total | number:'1.2-2' }} ( ${{
+              it.subsidio_aplicado_por_unidad | number:'1.2-2' }} / unidad )
+            </div>
+            <div *ngIf="!it.aplica_subsidio" class="text-red-500 text-xs">
+              No subsidiable: {{ it.motivo_no_subsidio ?? 'Sin motivo' }}
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-2" />
+
+        <div class="mt-2 text-lg font-bold">
+          <div class="text-base"><small>Total productos:</small> ${{ preview?.total_bruto ?? transactionTotal |
+            number:'1.2-2' }}</div>
+          <div *ngIf="hasSubsidioPreview()" class="text-sm text-gray-700">Subsidio aplicado: ${{
+            preview?.subsidio_estimado | number:'1.2-2' }}</div>
+          <div class="mt-1">Total a pagar: <span class="font-semibold">${{ preview?.total_recomendado ?? netTotal |
+              number:'1.2-2' }}</span></div>
+        </div>
+
+        <!-- campo NIP y botón único -->
+        <div class="mt-4" *ngIf="isVentaMonedero">
+          <label class="block text-sm font-medium mb-1">Ingresa tu NIP</label>
+          <input type="password" [(ngModel)]="nip" [disabled]="validandoNip || creating"
+            class="w-full border px-2 py-1 rounded" />
+
+          <div *ngIf="errorNipMsg" class="mt-2 p-2 bg-red-100 border border-red-300 text-red-800 rounded">
+            <strong>Error:</strong> {{ errorNipMsg }}
+          </div>
+
+          <div *ngIf="infoMsg" class="mt-2 p-2 bg-green-100 border border-green-300 text-green-800 rounded">
+            <strong>OK:</strong> {{ infoMsg }}
+          </div>
+
+          <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded mt-3 font-semibold"
+            (click)="validateNipAndPay()" [disabled]="validandoNip || creating || !nip">
+            {{ creating ? 'Procesando...' : 'Validar NIP y pagar' }}
+          </button>
+        </div>
+
+        <div class="mt-3">
+          <button class="w-full mt-2 text-red-600" (click)="closeModals()" [disabled]="creating">Cancelar</button>
+        </div>
+      </div>
     </div>
-    <p *ngIf="montoRecibido >= transactionTotal" class="mt-2">
-      <strong>Cambio:</strong> ${{ (montoRecibido - transactionTotal) | number:'1.2-2' }}
-    </p>
-    <button class="w-full bg-green-500 text-white py-2 rounded mt-4" [disabled]="montoRecibido < transactionTotal" (click)="processPaymentEfectivo()">Finalizar Venta</button>
-    <button class="w-full mt-2 text-red-600" (click)="closeModals()">Cancelar</button>
+
+
+
+
+
+    <!-- Modal de Métodos de Pago -->
+    <div *ngIf="showPaymentMethodModal && !isVentaMonedero"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-white p-6 rounded w-96">
+        <h3 class="text-lg font-semibold mb-4">Selecciona el Método de Pago</h3>
+        <!-- Botones generados dinámicamente -->
+        <div class="flex flex-col space-y-2">
+          <button *ngFor="let metodo of metodosPago" class="w-full bg-blue-500 text-white py-2 rounded"
+            (click)="seleccionarMetodoPago(metodo)">
+            {{ metodo.nombre }}
+          </button>
+        </div>
+        <button class="w-full mt-2 text-red-600" (click)="closeModals()">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- Modal de Pago en Efectivo -->
+    <div *ngIf="selectedMetodoPago && selectedMetodoPago.codigo === 'efectivo' && !isVentaMonedero"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-white p-6 rounded w-96">
+        <h3 class="text-lg font-semibold mb-4">Pago en Efectivo</h3>
+        <p><strong>Total a Pagar:</strong> ${{ transactionTotal | number:'1.2-2' }}</p>
+        <!-- Input readonly para ver el monto ingresado -->
+        <input type="text" class="border p-2 w-full text-right" [value]="montoRecibido" readonly
+          placeholder="Ingrese el monto" />
+        <!-- Teclado numérico -->
+        <div class="grid grid-cols-3 gap-2 mt-2">
+          <button class="bg-gray-200 p-2" (click)="ingresaNumero('7')">7</button>
+          <button class="bg-gray-200 p-2" (click)="ingresaNumero('8')">8</button>
+          <button class="bg-gray-200 p-2" (click)="ingresaNumero('9')">9</button>
+          <button class="bg-gray-200 p-2" (click)="ingresaNumero('4')">4</button>
+          <button class="bg-gray-200 p-2" (click)="ingresaNumero('5')">5</button>
+          <button class="bg-gray-200 p-2" (click)="ingresaNumero('6')">6</button>
+          <button class="bg-gray-200 p-2" (click)="ingresaNumero('1')">1</button>
+          <button class="bg-gray-200 p-2" (click)="ingresaNumero('2')">2</button>
+          <button class="bg-gray-200 p-2" (click)="ingresaNumero('3')">3</button>
+          <button class="bg-gray-200 p-2 col-span-2" (click)="ingresaNumero('0')">0</button>
+          <button class="bg-red-300 p-2" (click)="borrar()">Borrar</button>
+        </div>
+        <p *ngIf="montoRecibido >= transactionTotal" class="mt-2">
+          <strong>Cambio:</strong> ${{ (montoRecibido - transactionTotal) | number:'1.2-2' }}
+        </p>
+        <button class="w-full bg-green-500 text-white py-2 rounded mt-4" [disabled]="montoRecibido < transactionTotal"
+          (click)="processPaymentEfectivo()">Finalizar Venta</button>
+        <button class="w-full mt-2 text-red-600" (click)="closeModals()">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- Modal para Pago con otros métodos (diferente a 'efectivo') -->
+    <div *ngIf="selectedMetodoPago && selectedMetodoPago.codigo !== 'efectivo' && !isVentaMonedero"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-white p-6 rounded w-96">
+        <!-- Se muestra el nombre del método seleccionado dinámicamente -->
+        <h3 class="text-lg font-semibold mb-4">Pago con {{ selectedMetodoPago.nombre }}</h3>
+        <p><strong>Total a Pagar:</strong> ${{ transactionTotal | number:'1.2-2' }}</p>
+        <p>Realiza el cobro en la terminal y luego presiona finalizar para confirmar.</p>
+        <button class="w-full bg-green-500 text-white py-2 rounded mt-4" (click)="confirmarVenta()">Finalizar
+          Venta</button>
+        <button class="w-full mt-2 text-red-600" (click)="closeModals()">Cancelar</button>
+      </div>
+    </div>
+
+
   </div>
-</div>
-
-<!-- Modal para Pago con otros métodos (diferente a 'efectivo') -->
-<div *ngIf="selectedMetodoPago && selectedMetodoPago.codigo !== 'efectivo' && !isVentaMonedero" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-  <div class="bg-white p-6 rounded w-96">
-    <!-- Se muestra el nombre del método seleccionado dinámicamente -->
-    <h3 class="text-lg font-semibold mb-4">Pago con {{ selectedMetodoPago.nombre }}</h3>
-    <p><strong>Total a Pagar:</strong> ${{ transactionTotal | number:'1.2-2' }}</p>
-    <p>Realiza el cobro en la terminal y luego presiona finalizar para confirmar.</p>
-    <button class="w-full bg-green-500 text-white py-2 rounded mt-4" (click)="confirmarVenta()">Finalizar Venta</button>
-    <button class="w-full mt-2 text-red-600" (click)="closeModals()">Cancelar</button>
-  </div>
-</div>
-
-
-</div>

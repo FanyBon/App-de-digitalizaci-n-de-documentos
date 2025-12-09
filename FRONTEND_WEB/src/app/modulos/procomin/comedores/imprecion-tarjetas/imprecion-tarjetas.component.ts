@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { BarcodeDirective } from '../../../../shared/wrapperngx-barcode/barcode-wrapper.module';
 import { QRCodeDirective } from '../../../../shared/qrcode/qr-code.directive';
 import { EmpleadosService } from '../../../../services/sistemas/control_comidas/empleados.service';
-import { EmpresasService } from '../../../../services/sistemas/control_comidas/empresas.service';
+import { EmpresasService } from '../../../../services/empresas/empresas.service';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 

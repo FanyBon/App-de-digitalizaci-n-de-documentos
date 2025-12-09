@@ -1,0 +1,128 @@
+<!-- src/app/components/configuracion/permisos/rol-permisos/rol-permisos.component.html -->
+
+<!-- PANTALLA DE CARGA INICIAL -->
+<div *ngIf="!inicioCargaCompleto" class="flex items-center justify-center py-20">
+    <div class="text-center">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-green-600 mb-4"></div>
+        <p class="text-gray-600 text-lg font-medium">Cargando...</p>
+    </div>
+</div>
+
+<!-- CONTENIDO PRINCIPAL -->
+<div *ngIf="inicioCargaCompleto" class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+    <!-- Panel izquierdo: Lista de Roles -->
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-users text-green-600 mr-2"></i>
+                Roles
+            </h3>
+
+            <div class="space-y-2">
+                <button *ngFor="let rol of roles" (click)="seleccionarRol(rol.id)"
+                    [class]="rolSeleccionado === rol.id 
+                        ? 'bg-green-600 text-white' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                    class="w-full text-left px-4 py-3 rounded-lg transition flex items-center justify-between">
+                    <span>{{ rol.nombre }}</span>
+                    <i *ngIf="rolSeleccionado === rol.id" class="fas fa-check"></i>
+                </button>
+            </div>
+
+            <div *ngIf="roles.length === 0" class="text-center py-8 text-gray-500">
+                <i class="fas fa-inbox text-4xl mb-2"></i>
+                <p>No hay roles disponibles</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel derecho: Permisos del Rol -->
+    <div class="lg:col-span-3">
+        
+        <!-- Sin rol seleccionado -->
+        <div *ngIf="!rolSeleccionado" class="bg-white rounded-lg shadow p-8 text-center">
+            <i class="fas fa-hand-pointer text-gray-300 text-6xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">Selecciona un Rol</h3>
+            <p class="text-gray-500">
+                Haz clic en un rol del panel izquierdo para ver y gestionar sus permisos.
+            </p>
+        </div>
+
+        <!-- Con rol seleccionado -->
+        <div *ngIf="rolSeleccionado" class="bg-white rounded-lg shadow">
+            
+            <!-- Header -->
+            <div class="bg-green-600 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
+                <h3 class="text-lg font-bold">
+                    <i class="fas fa-user-shield mr-2"></i>
+                    Permisos de: {{ getNombreRol() }}
+                </h3>
+                <span class="bg-white text-green-600 px-3 py-1 rounded-full text-sm font-semibold">
+                    {{ permisosDelRol.length }} asignados
+                </span>
+            </div>
+
+            <!-- Búsqueda -->
+            <div class="p-4 border-b">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" [(ngModel)]="searchTerm"
+                        placeholder="Buscar permisos..."
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div *ngIf="loading" class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-600"></div>
+                <p class="text-gray-600 mt-2">Cargando permisos...</p>
+            </div>
+
+            <!-- Lista de permisos -->
+            <div *ngIf="!loading" class="p-4 max-h-[500px] overflow-y-auto">
+                <div class="space-y-2">
+                    <div *ngFor="let permiso of getPermisosFiltrados()"
+                        (click)="togglePermiso(permiso)"
+                        [class]="tienePermiso(permiso.id!) 
+                            ? 'bg-green-50 border-green-500' 
+                            : 'bg-gray-50 border-gray-200 hover:bg-gray-100'"
+                        class="border-2 rounded-lg p-3 cursor-pointer transition flex items-center justify-between">
+                        
+                        <div class="flex items-center">
+                            <div [class]="tienePermiso(permiso.id!) ? 'bg-green-500' : 'bg-gray-300'"
+                                class="w-5 h-5 rounded flex items-center justify-center mr-3">
+                                <i *ngIf="tienePermiso(permiso.id!)" class="fas fa-check text-white text-xs"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">{{ permiso.nombre }}</p>
+                                <p class="text-xs text-gray-500">
+                                    <span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded mr-2">{{ permiso.modulo }}</span>
+                                    {{ permiso.codigo }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <span *ngIf="tienePermiso(permiso.id!)" 
+                            class="text-green-600 text-sm font-semibold">
+                            Asignado
+                        </span>
+                    </div>
+                </div>
+
+                <div *ngIf="getPermisosFiltrados().length === 0" class="text-center py-8 text-gray-500">
+                    <i class="fas fa-search text-4xl mb-2"></i>
+                    <p>No se encontraron permisos</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Error -->
+<div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-6">
+    <strong class="font-bold">Error:</strong>
+    <span class="block sm:inline ml-2">{{ error }}</span>
+</div>

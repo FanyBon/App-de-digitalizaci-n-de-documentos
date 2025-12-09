@@ -1,4 +1,4 @@
-import { getConnection } from '../../config/db_controlcomidas';
+import { getPool  } from '../../config/db_controlcomidas';
 
 export interface DetalleVentaInterface {
   id?: number;
@@ -14,7 +14,7 @@ export interface DetalleVentaInterface {
 export class DetalleVenta {
   // Listar todos los detalles de venta
   static async listar(): Promise<DetalleVentaInterface[]> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [rows]: [any[], any] = await conn.query('SELECT * FROM detalle_venta');
       return rows;
@@ -26,7 +26,7 @@ export class DetalleVenta {
 
   // Obtener un detalle de venta por ID
   static async obtenerPorId(id: number): Promise<DetalleVentaInterface | null> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [rows]: [any[], any] = await conn.query('SELECT * FROM detalle_venta WHERE id = ?', [id]);
       if (rows.length === 0) return null;
@@ -39,7 +39,7 @@ export class DetalleVenta {
 
   // Crear un nuevo detalle de venta
   static async crear(detalleVenta: DetalleVentaInterface): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(
         `INSERT INTO detalle_venta (venta_id, producto_id, cantidad, precio_unitario, subsidio_aplicado, metodo_pago_id, created_at) 
@@ -66,7 +66,7 @@ export class DetalleVenta {
 
   // Editar un detalle de venta
   static async editar(id: number, data: Partial<DetalleVentaInterface>): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(`UPDATE detalle_venta SET ? WHERE id = ?`, [data, id]);
       if (result.affectedRows === 0) return { success: false, error: 'Detalle de venta no encontrado' };
@@ -79,7 +79,7 @@ export class DetalleVenta {
 
   // Eliminar un detalle de venta
   static async eliminar(id: number): Promise<{ success: boolean; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(`DELETE FROM detalle_venta WHERE id = ?`, [id]);
       if (result.affectedRows === 0) return { success: false, error: 'Detalle de venta no encontrado' };

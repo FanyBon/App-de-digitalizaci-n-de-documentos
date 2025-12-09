@@ -1,9 +1,9 @@
-import { getConnection } from '../../config/db_controlcomidas';
+import { getPool } from '../../config/db_controlcomidas';
 
 export class InventarioChips {
   // Lista todos los registros de detalles de chips
   static async listar(): Promise<any[]> {
-    const conn = await getConnection('local');
+    const conn = await getPool('local');
     try {
       const [rows]: any = await conn.query('SELECT * FROM inventario_chips');
       return rows;
@@ -21,7 +21,7 @@ export class InventarioChips {
     fecha_actualizacion_plan: string;  // Puede ser en formato 'YYYY-MM-DD'
     ubicacion_actual: 'comedor' | 'resguardo';
   }): Promise<any> {
-    const conn = await getConnection('local');
+    const conn = await getPool('local');
     try {
       const { inventario_id, numero_telefono, compania, fecha_actualizacion_plan, ubicacion_actual } = data;
       const [result]: any = await conn.query(
@@ -44,7 +44,7 @@ export class InventarioChips {
     fecha_actualizacion_plan?: string;
     ubicacion_actual?: 'comedor' | 'resguardo';
   }): Promise<any> {
-    const conn = await getConnection('local');
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(
         `UPDATE inventario_chips SET ? WHERE id = ?`,
@@ -62,7 +62,7 @@ export class InventarioChips {
 
   // Elimina un registro de detalles de chip
   static async eliminar(id: number): Promise<any> {
-    const conn = await getConnection('local');
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(
         `DELETE FROM inventario_chips WHERE id = ?`,

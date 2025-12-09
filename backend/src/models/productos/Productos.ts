@@ -1,5 +1,5 @@
 // src/models/Productos.ts
-import { getConnection } from '../../config/db_controlcomidas';
+import { getPool } from '../../config/db_controlcomidas';
 
 export interface ProductoInterface {
   id?: number;
@@ -28,7 +28,7 @@ export class Producto {
     codigo_barras: string,
     excludeId?: number
   ): Promise<boolean> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       let sql = 'SELECT id FROM productos WHERE (nombre = ? OR codigo_barras = ?)';
       const params: any[] = [nombre, codigo_barras];
@@ -46,7 +46,7 @@ export class Producto {
 
   /** Lista todos los productos (no incluye impuestos_extra). */
   static async listar(): Promise<ProductoInterface[]> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [rows]: [any[], any] = await conn.query('SELECT * FROM productos');
       return rows;
@@ -58,7 +58,7 @@ export class Producto {
 
   /** Obtiene un producto por ID y carga sus impuestos_extra. */
   static async obtenerPorId(id: number): Promise<ProductoInterface | null> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [rows]: [any[], any] =
         await conn.query('SELECT * FROM productos WHERE id = ?', [id]);
@@ -77,7 +77,7 @@ export class Producto {
   static async crear(
     producto: ProductoInterface
   ): Promise<{ success: boolean; data?: ProductoInterface; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       // 1) Validar unicidad
       const existe = await this.existeNombreOCodigo(
@@ -137,7 +137,7 @@ export class Producto {
     id: number,
     data: Partial<ProductoInterface>
   ): Promise<{ success: boolean; data?: ProductoInterface; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       // 1) Validar unicidad si cambiaron nombre o código
       if (data.nombre && data.codigo_barras) {
@@ -211,7 +211,7 @@ export class Producto {
 
   /** Elimina un producto (hard delete). */
   static async eliminar(id: number): Promise<{ success: boolean; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [res]: any = await conn.query(
         'DELETE FROM productos WHERE id = ?',
@@ -229,7 +229,7 @@ export class Producto {
 
   /** Busca productos por nombre o código de barras. */
   static async buscar(q: string): Promise<ProductoInterface[]> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       if (!q || q.trim() === '') return [];
       const likeQ = `%${q}%`;
@@ -278,7 +278,7 @@ export class Producto {
    * Con manejo de errores interno.
    */
   static async getImpuestosExtra(productoId: number): Promise<number[]> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [rows]: any[] = await conn.query(
         'SELECT impuesto_id FROM producto_impuesto_extra WHERE producto_id = ?',

@@ -1,0 +1,117 @@
+/* ========================================
+   ANIMACIONES
+========================================= */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* ========================================
+   TABS HEADER
+========================================= */
+
+nav button {
+  transition: all 0.2s ease-in-out;
+}
+
+nav button:hover {
+  transform: translateY(-2px);
+}
+
+nav button.border-blue-600 {
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+nav button:active {
+  transform: translateY(0);
+}
+
+/* ========================================
+   BADGES EN TABS
+========================================= */
+
+nav button span {
+  transition: all 0.2s ease;
+}
+
+/* ========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+  nav button span.ml-2 {
+    display: none;
+  }
+
+  nav button {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  nav button {
+    padding: 0.75rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  nav button i {
+    font-size: 1rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+}
+
+/* ========================================
+   ACCESIBILIDAD
+========================================= */
+
+nav button:focus-visible {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+nav button {
+  cursor: pointer;
+  user-select: none;
+}
+
+nav button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ========================================
+   CONTENEDOR PRINCIPAL
+========================================= */
+
+.bg-white.rounded-lg.shadow-md {
+  min-height: 600px;
+}
+
+.bg-gray-50 {
+  transition: background-color 0.2s ease;
+}
+
+/* ========================================
+   SCROLL SUAVE
+========================================= */
+
+html {
+  scroll-behavior: smooth;
+}

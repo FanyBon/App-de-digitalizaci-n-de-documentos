@@ -7,7 +7,7 @@ import { ProductosService, Producto } from '../../../services/productos/producto
 import { FamiliaProductoService, FamiliaProducto } from '../../../services/productos/familias-productos.service';
 import { CategoriaService, CategoriaArticulo } from '../../../services/productos/categoria.service';
 import { SubsidiosService, Subsidio } from '../../../services/ventas/subsidios.service';
-import { EmpresasService } from '../../../services/sistemas/control_comidas/empresas.service';
+import { EmpresasService } from '../../../services/empresas/empresas.service';
 
 @Component({
   selector: 'app-productos',

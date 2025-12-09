@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReportesService, ReportePorEmpleadoResponse } from '../../../../services/sistemas/control_comidas/reporte_comidas/reportes.service';
-import { EmpresasService } from '../../../../services/sistemas/control_comidas/empresas.service';
+import { EmpresasService } from '../../../../services/empresas/empresas.service';
 import { saveAs } from 'file-saver';
 import { finalize } from 'rxjs/operators';
 import * as XLSX from 'xlsx';

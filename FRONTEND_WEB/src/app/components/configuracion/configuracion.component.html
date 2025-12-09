@@ -1,0 +1,63 @@
+<div class="p-6 bg-gray-50 min-h-screen">
+  <div class="max-w-7xl mx-auto">
+    <!-- Encabezado -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">
+        <i class="fas fa-cogs text-blue-600 mr-3"></i>
+        Configuración del Sistema
+      </h1>
+      <p class="text-gray-600">
+        Administra las ubicaciones, dispositivos y configuraciones generales del sistema
+      </p>
+    </div>
+
+    <!-- Grid de Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+      <!-- Card Ubicaciones -->
+      <div 
+        (click)="navegarA('/configuracion/ubicaciones')"
+        class="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-blue-500">
+        <div class="flex items-center mb-4">
+          <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+            <i class="fas fa-map-marker-alt text-blue-600 text-2xl"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-gray-800">Ubicaciones</h3>
+            <p class="text-gray-500 text-sm">Gestiona las ubicaciones físicas</p>
+          </div>
+        </div>
+        <p class="text-gray-600 mb-4">
+          Administra las ubicaciones donde operan los puntos de venta y dispositivos del sistema.
+        </p>
+        <div class="flex items-center text-blue-600 font-semibold">
+          <span>Administrar ubicaciones</span>
+          <i class="fas fa-arrow-right ml-2"></i>
+        </div>
+      </div>
+
+      <!-- Card Dispositivos -->
+      <div 
+        (click)="navegarA('/configuracion/dispositivos')"
+        class="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-purple-500">
+        <div class="flex items-center mb-4">
+          <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+            <i class="fas fa-tablet-alt text-purple-600 text-2xl"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-gray-800">Dispositivos</h3>
+            <p class="text-gray-500 text-sm">Gestiona puntos de venta</p>
+          </div>
+        </div>
+        <p class="text-gray-600 mb-4">
+          Configura y administra los dispositivos (PDV, tablets, kioscos) asociados a cada ubicación.
+        </p>
+        <div class="flex items-center text-purple-600 font-semibold">
+          <span>Administrar dispositivos</span>
+          <i class="fas fa-arrow-right ml-2"></i>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

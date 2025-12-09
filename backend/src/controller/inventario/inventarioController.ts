@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { InventarioArticulo } from '../../models/inventario/InventarioArticulo';
 import { MovimientoInventario } from '../../models/inventario/MovimientoInventario';
-import { getConnection } from '../../config/db_controlcomidas';
+import { getPool } from '../../config/db_controlcomidas';
 
 // CRUD para Artículos de Inventario
 
@@ -100,7 +100,7 @@ export const editarMovimiento = async (req: Request, res: Response, next: NextFu
   }
 
   // Obtenemos el pool, luego una conexión individual
-  const connection = await getConnection();
+  const connection = await getPool().getConnection();
 
 
 
@@ -203,7 +203,7 @@ export const eliminarMovimiento = async (req: Request, res: Response, next: Next
   }
   
   // Obtenemos el pool y luego una conexión individual
-  const connection = await getConnection();
+  const connection = await getPool().getConnection();
 
 
   try {
@@ -255,7 +255,7 @@ export const moverInventario = async (req: Request, res: Response, next: NextFun
   }
 
   // Obtenemos el pool y luego una conexión individual
-  const connection = await getConnection();
+  const connection = await getPool().getConnection();
 
 
   try {

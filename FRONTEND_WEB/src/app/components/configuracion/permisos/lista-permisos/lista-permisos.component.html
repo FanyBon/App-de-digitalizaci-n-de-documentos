@@ -1,0 +1,322 @@
+<p>lista-permisos works!</p>
+<!-- src/app/components/configuracion/permisos/lista-permisos/lista-permisos.component.html -->
+
+<!-- PANTALLA DE CARGA INICIAL -->
+<div *ngIf="!inicioCargaCompleto" class="flex items-center justify-center py-20">
+    <div class="text-center">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600 mb-4"></div>
+        <p class="text-gray-600 text-lg font-medium">Cargando permisos...</p>
+    </div>
+</div>
+
+<!-- CONTENIDO PRINCIPAL -->
+<div *ngIf="inicioCargaCompleto">
+
+    <!-- Barra de acciones -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="flex flex-col lg:flex-row gap-4 items-center justify-between">
+            
+            <!-- Búsqueda -->
+            <div class="flex-1 w-full lg:w-auto">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()"
+                        placeholder="Buscar por código, nombre, módulo o acción..."
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+            </div>
+
+            <!-- Filtro por módulo -->
+            <div class="flex items-center gap-2">
+                <label class="text-sm text-gray-600 whitespace-nowrap">Módulo:</label>
+                <select [(ngModel)]="filtroModulo" (ngModelChange)="cambiarFiltroModulo($event)"
+                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                    <option value="todos">Todos</option>
+                    <option *ngFor="let modulo of modulosUnicos" [value]="modulo">{{ modulo }}</option>
+                </select>
+            </div>
+
+            <!-- Filtros de estado -->
+            <div class="flex gap-2">
+                <button (click)="cambiarFiltroActivo('todos')"
+                    [class]="filtroActivo === 'todos' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                    class="px-3 py-2 rounded-lg hover:opacity-90 transition text-sm">
+                    Todos
+                </button>
+                <button (click)="cambiarFiltroActivo('activos')"
+                    [class]="filtroActivo === 'activos' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'"
+                    class="px-3 py-2 rounded-lg hover:opacity-90 transition text-sm">
+                    Activos
+                </button>
+                <button (click)="cambiarFiltroActivo('inactivos')"
+                    [class]="filtroActivo === 'inactivos' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'"
+                    class="px-3 py-2 rounded-lg hover:opacity-90 transition text-sm">
+                    Inactivos
+                </button>
+            </div>
+
+            <!-- Exportación -->
+            <div class="flex gap-2">
+                <button (click)="exportarCSV()" 
+                    class="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition text-sm">
+                    <i class="fas fa-file-csv mr-1"></i> CSV
+                </button>
+                <button (click)="exportarExcel()" 
+                    class="bg-emerald-600 text-white px-3 py-2 rounded-lg hover:bg-emerald-700 transition text-sm">
+                    <i class="fas fa-file-excel mr-1"></i> Excel
+                </button>
+            </div>
+
+            <!-- Botón Nuevo -->
+            <button (click)="abrirModalNuevo()"
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center whitespace-nowrap">
+                <i class="fas fa-plus mr-2"></i>
+                Nuevo Permiso
+            </button>
+        </div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6">
+        <strong class="font-bold">Error:</strong>
+        <span class="block sm:inline ml-2">{{ error }}</span>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+        <p class="text-gray-600 mt-4">Procesando...</p>
+    </div>
+
+    <!-- Tabla de permisos -->
+    <div *ngIf="!loading" class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Código</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Nombre</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Módulo</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Acción</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase">Tipo</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase">Estado</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    <tr *ngFor="let permiso of permisosPaginados" class="hover:bg-gray-50">
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="font-mono text-sm text-gray-900 bg-gray-100 px-2 py-1 rounded">
+                                {{ permiso.codigo }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center">
+                                <i class="fas fa-key text-blue-500 mr-2"></i>
+                                <span class="font-medium text-gray-900">{{ permiso.nombre }}</span>
+                            </div>
+                            <p *ngIf="permiso.descripcion" class="text-xs text-gray-500 mt-1">{{ permiso.descripcion }}</p>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                                {{ permiso.modulo }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                            {{ permiso.accion }}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center">
+                            <span [class]="getBadgeSistema(permiso.es_sistema || false)"
+                                class="px-2 py-1 text-xs font-semibold rounded-full">
+                                {{ permiso.es_sistema ? 'Sistema' : 'Personalizado' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center">
+                            <span [class]="getBadgeEstado(permiso.activo || false)"
+                                class="px-3 py-1 text-xs font-semibold rounded-full">
+                                {{ permiso.activo ? 'Activo' : 'Inactivo' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button (click)="abrirModalEditar(permiso)"
+                                    class="text-blue-600 hover:text-blue-900 p-1" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button (click)="cambiarEstatus(permiso)"
+                                    [class]="permiso.activo ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'"
+                                    class="p-1" [title]="permiso.activo ? 'Desactivar' : 'Activar'">
+                                    <i [class]="permiso.activo ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
+                                </button>
+                                <button *ngIf="!permiso.es_sistema" (click)="eliminarPermiso(permiso)"
+                                    class="text-red-600 hover:text-red-900 p-1" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Sin resultados -->
+            <div *ngIf="permisosFiltrados.length === 0" class="text-center py-12">
+                <i class="fas fa-inbox text-gray-400 text-5xl mb-4"></i>
+                <p class="text-gray-600 text-lg">No se encontraron permisos</p>
+            </div>
+        </div>
+
+        <!-- Paginación -->
+        <div *ngIf="permisosFiltrados.length > 0"
+            class="bg-gray-50 px-4 py-3 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-gray-700">
+                Mostrando
+                <span class="font-semibold">{{ (paginaActual - 1) * itemsPorPagina + 1 }}</span>
+                a
+                <span class="font-semibold">{{ Math.min(paginaActual * itemsPorPagina, permisosFiltrados.length) }}</span>
+                de
+                <span class="font-semibold">{{ permisosFiltrados.length }}</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <label class="text-sm text-gray-600">Mostrar:</label>
+                <select [(ngModel)]="itemsPorPagina" (ngModelChange)="cambiarItemsPorPagina($event)"
+                    class="border border-gray-300 rounded px-2 py-1 text-sm">
+                    <option *ngFor="let op of opcionesPaginacion" [value]="op">{{ op }}</option>
+                </select>
+            </div>
+
+            <div *ngIf="totalPaginas > 1" class="flex items-center gap-1">
+                <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1"
+                    [class]="paginaActual === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'"
+                    class="px-2 py-1 border rounded text-sm">
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+                <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1"
+                    [class]="paginaActual === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'"
+                    class="px-2 py-1 border rounded text-sm">
+                    <i class="fas fa-angle-left"></i>
+                </button>
+                <button *ngFor="let pagina of getPaginas()" (click)="cambiarPagina(pagina)"
+                    [class]="pagina === paginaActual ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-100'"
+                    class="px-3 py-1 border rounded text-sm">
+                    {{ pagina }}
+                </button>
+                <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas"
+                    [class]="paginaActual === totalPaginas ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'"
+                    class="px-2 py-1 border rounded text-sm">
+                    <i class="fas fa-angle-right"></i>
+                </button>
+                <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas"
+                    [class]="paginaActual === totalPaginas ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'"
+                    class="px-2 py-1 border rounded text-sm">
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL CREAR/EDITAR -->
+<div *ngIf="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        
+        <!-- Header -->
+        <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg sticky top-0 z-10">
+            <h3 class="text-xl font-bold">
+                <i [class]="modoEdicion ? 'fas fa-edit' : 'fas fa-plus'" class="mr-2"></i>
+                {{ modoEdicion ? 'Editar Permiso' : 'Nuevo Permiso' }}
+            </h3>
+        </div>
+
+        <!-- Body -->
+        <form (ngSubmit)="guardarPermiso()" class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <!-- Código -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Código <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" [(ngModel)]="permisoForm.codigo" name="codigo"
+                        [disabled]="modoEdicion && permisoForm.es_sistema === true"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Ej: usuarios.crear" />
+                </div>
+
+                <!-- Nombre -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Nombre <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" [(ngModel)]="permisoForm.nombre" name="nombre"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Ej: Crear usuarios" />
+                </div>
+
+                <!-- Módulo -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Módulo <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" [(ngModel)]="permisoForm.modulo" name="modulo"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Ej: usuarios" />
+                </div>
+
+                <!-- Acción -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Acción <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" [(ngModel)]="permisoForm.accion" name="accion"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Ej: crear" />
+                </div>
+
+                <!-- Método HTTP -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Método HTTP</label>
+                    <select [(ngModel)]="permisoForm.metodo" name="metodo"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Sin especificar</option>
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="PATCH">PATCH</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </div>
+
+                <!-- Ruta API -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Ruta API</label>
+                    <input type="text" [(ngModel)]="permisoForm.ruta" name="ruta"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Ej: /api/usuarios" />
+                </div>
+
+                <!-- Descripción -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                    <textarea [(ngModel)]="permisoForm.descripcion" name="descripcion" rows="2"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Descripción del permiso..."></textarea>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+                <button type="button" (click)="cerrarModal()"
+                    class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                    Cancelar
+                </button>
+                <button type="submit"
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-save mr-2"></i>
+                    {{ modoEdicion ? 'Actualizar' : 'Crear' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

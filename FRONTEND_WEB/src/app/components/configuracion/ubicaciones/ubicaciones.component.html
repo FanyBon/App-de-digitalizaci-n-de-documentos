@@ -1,0 +1,103 @@
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-[1600px] mx-auto p-6">
+
+        <!-- ENCABEZADO GENERAL DEL MÓDULO -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2 flex items-center">
+                <i class="fas fa-building text-blue-600 mr-3"></i>
+                Gestión de Empresas y Ubicaciones
+            </h1>
+            <p class="text-gray-600">
+                Administra las empresas y sus ubicaciones físicas en el sistema
+            </p>
+        </div>
+
+        <!-- SISTEMA DE TABS -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            
+            <!-- Tabs Header / Navegación -->
+            <div class="border-b border-gray-200 bg-white">
+                <nav class="flex -mb-px" role="tablist">
+                    
+                    <!-- Tab 1: Empresas -->
+                    <button
+                        type="button"
+                        role="tab"
+                        [attr.aria-selected]="tabActiva === 'empresas'"
+                        (click)="cambiarTab('empresas')"
+                        [class.border-blue-600]="tabActiva === 'empresas'"
+                        [class.text-blue-600]="tabActiva === 'empresas'"
+                        [class.border-transparent]="tabActiva !== 'empresas'"
+                        [class.text-gray-500]="tabActiva !== 'empresas'"
+                        class="group inline-flex items-center gap-2 py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        
+                        <i class="fas fa-building text-lg"
+                            [class.text-blue-600]="tabActiva === 'empresas'"
+                            [class.text-gray-400]="tabActiva !== 'empresas'"></i>
+                        
+                        <span class="font-semibold">Empresas</span>
+                        
+                        <span class="ml-2 px-2 py-0.5 text-xs font-medium rounded-full transition-colors"
+                            [class.bg-blue-100]="tabActiva === 'empresas'"
+                            [class.text-blue-800]="tabActiva === 'empresas'"
+                            [class.bg-gray-100]="tabActiva !== 'empresas'"
+                            [class.text-gray-600]="tabActiva !== 'empresas'">
+                            Organizaciones
+                        </span>
+                    </button>
+
+                    <!-- Tab 2: Ubicaciones -->
+                    <button
+                        type="button"
+                        role="tab"
+                        [attr.aria-selected]="tabActiva === 'ubicaciones'"
+                        (click)="cambiarTab('ubicaciones')"
+                        [class.border-blue-600]="tabActiva === 'ubicaciones'"
+                        [class.text-blue-600]="tabActiva === 'ubicaciones'"
+                        [class.border-transparent]="tabActiva !== 'ubicaciones'"
+                        [class.text-gray-500]="tabActiva !== 'ubicaciones'"
+                        class="group inline-flex items-center gap-2 py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        
+                        <i class="fas fa-map-marker-alt text-lg"
+                            [class.text-blue-600]="tabActiva === 'ubicaciones'"
+                            [class.text-gray-400]="tabActiva !== 'ubicaciones'"></i>
+                        
+                        <span class="font-semibold">Ubicaciones</span>
+                        
+                        <span class="ml-2 px-2 py-0.5 text-xs font-medium rounded-full transition-colors"
+                            [class.bg-blue-100]="tabActiva === 'ubicaciones'"
+                            [class.text-blue-800]="tabActiva === 'ubicaciones'"
+                            [class.bg-gray-100]="tabActiva !== 'ubicaciones'"
+                            [class.text-gray-600]="tabActiva !== 'ubicaciones'">
+                            Locales
+                        </span>
+                    </button>
+
+                </nav>
+            </div>
+
+            <!-- TABS CONTENT / CONTENIDO -->
+            <div class="bg-gray-50">
+                
+                <!-- Content Tab 1: Lista de Empresas -->
+                <div 
+                    *ngIf="tabActiva === 'empresas'"
+                    role="tabpanel"
+                    class="animate-fadeIn">
+                    <app-lista-empresas></app-lista-empresas>
+                </div>
+
+                <!-- Content Tab 2: Lista de Ubicaciones -->
+                <div 
+                    *ngIf="tabActiva === 'ubicaciones'"
+                    role="tabpanel"
+                    class="animate-fadeIn">
+                    <app-lista-ubicaciones></app-lista-ubicaciones>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>

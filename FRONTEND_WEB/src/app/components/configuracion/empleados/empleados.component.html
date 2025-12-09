@@ -1,0 +1,103 @@
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-[1600px] mx-auto p-6">
+
+        <!-- ENCABEZADO GENERAL DEL MÓDULO -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2 flex items-center">
+                <i class="fas fa-users text-blue-600 mr-3"></i>
+                Gestión de Empleados
+            </h1>
+            <p class="text-gray-600">
+                Administra los empleados, sus datos y consulta estadísticas del sistema
+            </p>
+        </div>
+
+        <!-- SISTEMA DE TABS -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            
+            <!-- Tabs Header / Navegación -->
+            <div class="border-b border-gray-200 bg-white">
+                <nav class="flex -mb-px" role="tablist">
+                    
+                    <!-- Tab 1: Lista de Empleados -->
+                    <button
+                        type="button"
+                        role="tab"
+                        [attr.aria-selected]="tabActiva === 'lista'"
+                        (click)="cambiarTab('lista')"
+                        [class.border-blue-600]="tabActiva === 'lista'"
+                        [class.text-blue-600]="tabActiva === 'lista'"
+                        [class.border-transparent]="tabActiva !== 'lista'"
+                        [class.text-gray-500]="tabActiva !== 'lista'"
+                        class="group inline-flex items-center gap-2 py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        
+                        <i class="fas fa-list text-lg"
+                            [class.text-blue-600]="tabActiva === 'lista'"
+                            [class.text-gray-400]="tabActiva !== 'lista'"></i>
+                        
+                        <span class="font-semibold">Empleados</span>
+                        
+                        <span class="ml-2 px-2 py-0.5 text-xs font-medium rounded-full transition-colors"
+                            [class.bg-blue-100]="tabActiva === 'lista'"
+                            [class.text-blue-800]="tabActiva === 'lista'"
+                            [class.bg-gray-100]="tabActiva !== 'lista'"
+                            [class.text-gray-600]="tabActiva !== 'lista'">
+                            CRUD
+                        </span>
+                    </button>
+
+                    <!-- Tab 2: Estadísticas -->
+                    <button
+                        type="button"
+                        role="tab"
+                        [attr.aria-selected]="tabActiva === 'estadisticas'"
+                        (click)="cambiarTab('estadisticas')"
+                        [class.border-blue-600]="tabActiva === 'estadisticas'"
+                        [class.text-blue-600]="tabActiva === 'estadisticas'"
+                        [class.border-transparent]="tabActiva !== 'estadisticas'"
+                        [class.text-gray-500]="tabActiva !== 'estadisticas'"
+                        class="group inline-flex items-center gap-2 py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        
+                        <i class="fas fa-chart-bar text-lg"
+                            [class.text-blue-600]="tabActiva === 'estadisticas'"
+                            [class.text-gray-400]="tabActiva !== 'estadisticas'"></i>
+                        
+                        <span class="font-semibold">Estadísticas</span>
+                        
+                        <span class="ml-2 px-2 py-0.5 text-xs font-medium rounded-full transition-colors"
+                            [class.bg-blue-100]="tabActiva === 'estadisticas'"
+                            [class.text-blue-800]="tabActiva === 'estadisticas'"
+                            [class.bg-gray-100]="tabActiva !== 'estadisticas'"
+                            [class.text-gray-600]="tabActiva !== 'estadisticas'">
+                            Dashboard
+                        </span>
+                    </button>
+
+                </nav>
+            </div>
+
+            <!-- TABS CONTENT / CONTENIDO -->
+            <div class="bg-gray-50">
+                
+                <!-- Content Tab 1: Lista de Empleados -->
+                <div 
+                    *ngIf="tabActiva === 'lista'"
+                    role="tabpanel"
+                    class="animate-fadeIn">
+                    <app-lista-empleados></app-lista-empleados>
+                </div>
+
+                <!-- Content Tab 2: Estadísticas -->
+                <div 
+                    *ngIf="tabActiva === 'estadisticas'"
+                    role="tabpanel"
+                    class="animate-fadeIn">
+                    <app-estadisticas-empleados></app-estadisticas-empleados>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>

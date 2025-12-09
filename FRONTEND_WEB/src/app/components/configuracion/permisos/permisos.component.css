@@ -1,0 +1,53 @@
+/* src/app/components/configuracion/permisos/permisos.component.css */
+
+/* Tabs */
+nav button {
+    transition: all 0.3s ease;
+}
+
+nav button:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Tab activa - borde más grueso */
+nav button.border-blue-500,
+nav button.border-green-500,
+nav button.border-purple-500,
+nav button.border-orange-500 {
+    border-bottom-width: 3px;
+}
+
+/* Animación de contenido */
+.tab-content > * {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive tabs */
+@media (max-width: 768px) {
+    nav button {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    nav button i {
+        display: block;
+        margin-bottom: 0.25rem;
+        margin-right: 0;
+    }
+    
+    nav button span:not(.fas):not(.far) {
+        display: block;
+        font-size: 0.65rem;
+    }
+}

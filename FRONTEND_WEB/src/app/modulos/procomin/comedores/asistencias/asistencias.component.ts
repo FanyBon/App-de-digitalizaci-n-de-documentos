@@ -1,7 +1,7 @@
 // src/app/modules/control_comidas/asistencias/asistencias.component.ts
 import { Component, OnInit } from '@angular/core';
 import { AsistenciasService } from '../../../../services/sistemas/control_comidas/asistencias.service';
-import { EmpresasService }   from '../../../../services/sistemas/control_comidas/empresas.service';
+import { EmpresasService }   from '../../../../services/empresas/empresas.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';

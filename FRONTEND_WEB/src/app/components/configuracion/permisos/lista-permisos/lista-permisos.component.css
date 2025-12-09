@@ -1,0 +1,100 @@
+/* src/app/components/configuracion/permisos/lista-permisos/lista-permisos.component.css */
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+tbody tr {
+    animation: fadeIn 0.3s ease-out;
+}
+
+tbody tr:hover {
+    background-color: #f9fafb;
+    transition: background-color 0.2s ease;
+}
+
+/* Código monospace */
+.font-mono {
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: -0.5px;
+}
+
+/* Botones */
+button {
+    transition: all 0.2s ease;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Modal */
+.fixed {
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* Hover en botones de acción */
+td button {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+td button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Scrollbar */
+.overflow-x-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+    height: 8px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+    background: #f7fafc;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+/* Focus */
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    th:nth-child(4),
+    td:nth-child(4),
+    th:nth-child(5),
+    td:nth-child(5) {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    th:nth-child(3),
+    td:nth-child(3) {
+        display: none;
+    }
+}

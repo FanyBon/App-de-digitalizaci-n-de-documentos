@@ -1,0 +1,638 @@
+<!-- PANTALLA DE CARGA INICIAL -->
+<div *ngIf="!inicioCargaCompleto" class="flex items-center justify-center py-20">
+    <div class="text-center">
+        <div class="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600 mb-4"></div>
+        <p class="text-gray-600 text-lg font-medium">Cargando empleados...</p>
+        <p class="text-gray-500 text-sm mt-2">Por favor espera un momento</p>
+    </div>
+</div>
+
+<!-- CONTENIDO PRINCIPAL -->
+<div *ngIf="inicioCargaCompleto" class="p-6">
+
+    <!-- Barra de acciones -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+
+            <!-- Búsqueda -->
+            <div class="flex-1 w-full md:w-auto">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()"
+                        placeholder="Buscar por nombre, cédula, código de barras..."
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+            </div>
+
+            <!-- Filtros de estatus -->
+            <div class="flex gap-2">
+                <button (click)="cambiarFiltro('todos')"
+                    [class]="filtroEstatus === 'todos' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                    class="px-4 py-2 rounded-lg hover:opacity-90 transition text-sm">
+                    Todos ({{ empleados.length }})
+                </button>
+                <button (click)="cambiarFiltro('activo')"
+                    [class]="filtroEstatus === 'activo' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'"
+                    class="px-4 py-2 rounded-lg hover:opacity-90 transition text-sm">
+                    Activos
+                </button>
+                <button (click)="cambiarFiltro('inactivo')"
+                    [class]="filtroEstatus === 'inactivo' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'"
+                    class="px-4 py-2 rounded-lg hover:opacity-90 transition text-sm">
+                    Inactivos
+                </button>
+            </div>
+
+            <!-- Botones de vista y exportación -->
+            <div class="flex gap-2 items-center">
+                <!-- Toggle de vista -->
+                <div class="flex gap-1 bg-gray-200 rounded-lg p-1">
+                    <button (click)="cambiarVista('tabla')"
+                        [class]="vistaActual === 'tabla' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'"
+                        class="px-3 py-1 rounded-md transition text-sm font-medium"
+                        title="Vista de tabla">
+                        <i class="fas fa-table"></i>
+                    </button>
+                    <button (click)="cambiarVista('tarjetas')"
+                        [class]="vistaActual === 'tarjetas' ? 'bg-white text-blue-600 shadow' : 'text-gray-600'"
+                        class="px-3 py-1 rounded-md transition text-sm font-medium"
+                        title="Vista de tarjetas">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                </div>
+                
+                <div class="h-6 w-px bg-gray-300"></div>
+                
+                <!-- Botones de exportación -->
+                <button (click)="exportarCSV()"
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center"
+                    title="Exportar a CSV">
+                    <i class="fas fa-file-csv mr-2"></i>
+                    CSV
+                </button>
+                <button (click)="exportarExcel()"
+                    class="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition flex items-center"
+                    title="Exportar a Excel">
+                    <i class="fas fa-file-excel mr-2"></i>
+                    Excel
+                </button>
+            </div>
+
+            <!-- Botón Nuevo Empleado -->
+            <button (click)="abrirModalNuevo()"
+                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition flex items-center whitespace-nowrap">
+                <i class="fas fa-plus mr-2"></i>
+                Nuevo Empleado
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+        <p class="text-gray-600 mt-4">Procesando...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error && !loading"
+        class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6">
+        <strong class="font-bold">Error:</strong>
+        <span class="block sm:inline ml-2">{{ error }}</span>
+    </div>
+
+    <!-- VISTA DE TABLA -->
+    <div *ngIf="!loading && !error && vistaActual === 'tabla'" class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Empleado
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Empresa
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Cédula
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Comidas/Día
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Subsidio
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Estado
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    <tr *ngFor="let empleado of empleadosPaginados" class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class="fas fa-user-circle text-blue-600 mr-2 text-xl"></i>
+                                <div>
+                                    <span class="font-medium text-gray-900">{{ empleado.nombre }}</span>
+                                    <div class="text-xs text-gray-500">
+                                        <i class="fas fa-barcode mr-1"></i>
+                                        {{ empleado.codigo_barras }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ empleado.empresa_nombre || 'N/A' }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-id-card text-gray-400 mr-2"></i>
+                                {{ empleado.cedula }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="inline-flex items-center px-3 py-1 text-sm bg-purple-100 text-purple-800 rounded-full font-semibold">
+                                {{ empleado.max_asistencias_por_dia }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span *ngIf="empleado.aplica_subsidio" class="text-green-600">
+                                <i class="fas fa-check-circle"></i> Sí
+                            </span>
+                            <span *ngIf="!empleado.aplica_subsidio" class="text-gray-400">
+                                <i class="fas fa-times-circle"></i> No
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span [class]="getBadgeEstatus(empleado.activo)"
+                                class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                {{ empleado.activo ? 'Activo' : 'Inactivo' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                            <div class="flex items-center justify-center gap-2">
+                                <button (click)="abrirModalEditar(empleado)"
+                                    class="text-blue-600 hover:text-blue-900" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                
+                                <button *ngIf="!empleado.activo" 
+                                    (click)="reactivarEmpleado(empleado)"
+                                    class="text-green-600 hover:text-green-900" title="Reactivar">
+                                    <i class="fas fa-check-circle"></i>
+                                </button>
+                                
+                                <button *ngIf="empleado.activo" 
+                                    (click)="desactivarEmpleado(empleado)"
+                                    class="text-orange-600 hover:text-orange-900" title="Desactivar">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                                
+                                <button *ngIf="!empleado.activo" 
+                                    (click)="eliminarPermanente(empleado)"
+                                    class="text-red-600 hover:text-red-900" title="Eliminar permanentemente">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Sin resultados -->
+            <div *ngIf="empleadosFiltrados.length === 0" class="text-center py-12">
+                <i class="fas fa-inbox text-gray-400 text-6xl mb-4"></i>
+                <p class="text-gray-600 text-lg">No se encontraron empleados</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- VISTA DE TARJETAS -->
+    <div *ngIf="!loading && !error && vistaActual === 'tarjetas'" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        
+        <!-- Sin resultados -->
+        <div *ngIf="empleadosFiltrados.length === 0" class="col-span-full text-center py-12">
+            <i class="fas fa-inbox text-gray-400 text-6xl mb-4"></i>
+            <p class="text-gray-600 text-lg">No se encontraron empleados</p>
+        </div>
+
+        <!-- Tarjeta por empleado -->
+        <div *ngFor="let empleado of empleadosPaginados" 
+            class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+            
+            <!-- Header de la tarjeta -->
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="font-bold text-lg mb-1 flex items-center">
+                            <i class="fas fa-user-circle mr-2"></i>
+                            {{ empleado.nombre }}
+                        </h3>
+                        <p class="text-blue-100 text-sm">
+                            <i class="fas fa-building mr-1"></i>
+                            {{ empleado.empresa_nombre || 'Sin empresa' }}
+                        </p>
+                    </div>
+                    <span [class]="getBadgeEstatus(empleado.activo)"
+                        class="px-3 py-1 text-xs font-semibold rounded-full">
+                        {{ empleado.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Cuerpo de la tarjeta -->
+            <div class="p-4">
+                
+                <!-- Información principal -->
+                <div class="mb-4 space-y-2">
+                    <div class="flex items-center text-sm text-gray-600">
+                        <i class="fas fa-id-card w-5 text-gray-400"></i>
+                        <span class="font-semibold mr-2">Cédula:</span>
+                        <span>{{ empleado.cedula }}</span>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-600">
+                        <i class="fas fa-barcode w-5 text-gray-400"></i>
+                        <span class="font-semibold mr-2">Código:</span>
+                        <span class="text-xs">{{ empleado.codigo_barras }}</span>
+                    </div>
+                </div>
+
+                <!-- Estadísticas visuales -->
+                <div class="mb-4">
+                    <p class="text-xs font-semibold text-gray-600 uppercase mb-2">Información</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        
+                        <!-- Comidas por día -->
+                        <div class="bg-purple-50 rounded-lg p-3 text-center">
+                            <i class="fas fa-utensils text-purple-600 text-xl mb-1"></i>
+                            <p class="text-2xl font-bold text-purple-700">{{ empleado.max_asistencias_por_dia }}</p>
+                            <p class="text-xs text-purple-600 font-medium">Comidas/Día</p>
+                        </div>
+
+                        <!-- Subsidio -->
+                        <div [class]="empleado.aplica_subsidio ? 'bg-green-50' : 'bg-gray-50'" class="rounded-lg p-3 text-center">
+                            <i [class]="empleado.aplica_subsidio ? 'fas fa-check-circle text-green-600' : 'fas fa-times-circle text-gray-400'" class="text-xl mb-1"></i>
+                            <p class="text-2xl font-bold" [class]="empleado.aplica_subsidio ? 'text-green-700' : 'text-gray-500'">
+                                {{ empleado.aplica_subsidio ? 'Sí' : 'No' }}
+                            </p>
+                            <p class="text-xs font-medium" [class]="empleado.aplica_subsidio ? 'text-green-600' : 'text-gray-500'">Subsidio</p>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Fecha de creación -->
+                <div class="text-xs text-gray-500 mb-3">
+                    <i class="fas fa-clock mr-1"></i>
+                    Creado: {{ empleado.created_at ? (empleado.created_at | date:'dd/MM/yyyy') : 'N/A' }}
+                </div>
+
+            </div>
+
+            <!-- Footer con acciones -->
+            <div class="bg-gray-50 px-4 py-3 border-t flex justify-end gap-2">
+                <button (click)="abrirModalEditar(empleado)"
+                    class="text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 rounded transition"
+                    title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>
+                
+                <button *ngIf="!empleado.activo" 
+                    (click)="reactivarEmpleado(empleado)"
+                    class="text-green-600 hover:text-green-900 hover:bg-green-50 p-2 rounded transition"
+                    title="Reactivar">
+                    <i class="fas fa-check-circle"></i>
+                </button>
+                
+                <button *ngIf="empleado.activo" 
+                    (click)="desactivarEmpleado(empleado)"
+                    class="text-orange-600 hover:text-orange-900 hover:bg-orange-50 p-2 rounded transition"
+                    title="Desactivar">
+                    <i class="fas fa-ban"></i>
+                </button>
+                
+                <button *ngIf="!empleado.activo" 
+                    (click)="eliminarPermanente(empleado)"
+                    class="text-red-600 hover:text-red-900 hover:bg-red-50 p-2 rounded transition"
+                    title="Eliminar permanentemente">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Paginación (compartida por ambas vistas) -->
+    <div *ngIf="empleadosFiltrados.length > 0"
+        class="bg-white rounded-lg shadow px-6 py-4 mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+
+        <!-- Info de registros -->
+        <div class="text-sm text-gray-700">
+            Mostrando
+            <span class="font-semibold">{{ (paginaActual - 1) * itemsPorPagina + 1 }}</span>
+            a
+            <span class="font-semibold">{{ Math.min(paginaActual * itemsPorPagina, empleadosFiltrados.length) }}</span>
+            de
+            <span class="font-semibold">{{ empleadosFiltrados.length }}</span>
+            resultados
+        </div>
+
+        <!-- Selector de items por página -->
+        <div class="flex items-center gap-2">
+            <label class="text-sm text-gray-700">Mostrar:</label>
+            <select [(ngModel)]="itemsPorPagina" (ngModelChange)="cambiarItemsPorPagina($event)"
+                class="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option *ngFor="let opcion of opcionesPaginacion" [value]="opcion">
+                    {{ opcion }}
+                </option>
+            </select>
+        </div>
+
+        <!-- Navegación de páginas -->
+        <div *ngIf="totalPaginas > 1" class="flex items-center gap-1">
+            <button (click)="cambiarPagina(1)" [disabled]="paginaActual === 1"
+                [class]="paginaActual === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'"
+                class="px-3 py-1 border border-gray-300 rounded text-sm transition" title="Primera página">
+                <i class="fas fa-angle-double-left"></i>
+            </button>
+
+            <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1"
+                [class]="paginaActual === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'"
+                class="px-3 py-1 border border-gray-300 rounded text-sm transition" title="Página anterior">
+                <i class="fas fa-angle-left"></i>
+            </button>
+
+            <button *ngFor="let pagina of getPaginas()" (click)="cambiarPagina(pagina)"
+                [class]="pagina === paginaActual ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'"
+                class="px-3 py-1 border border-gray-300 rounded text-sm font-medium transition">
+                {{ pagina }}
+            </button>
+
+            <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas"
+                [class]="paginaActual === totalPaginas ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'"
+                class="px-3 py-1 border border-gray-300 rounded text-sm transition" title="Página siguiente">
+                <i class="fas fa-angle-right"></i>
+            </button>
+
+            <button (click)="cambiarPagina(totalPaginas)" [disabled]="paginaActual === totalPaginas"
+                [class]="paginaActual === totalPaginas ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'"
+                class="px-3 py-1 border border-gray-300 rounded text-sm transition" title="Última página">
+                <i class="fas fa-angle-double-right"></i>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- MODAL CRUD -->
+<div *ngIf="showModal" 
+    class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    
+    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full my-8 transform transition-all">
+        
+        <!-- Header del Modal -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-t-lg">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold flex items-center">
+                    <i [class]="modoEdicion ? 'fas fa-edit' : 'fas fa-plus-circle'" class="mr-2"></i>
+                    {{ modoEdicion ? 'Editar Empleado' : 'Nuevo Empleado' }}
+                </h2>
+                <button (click)="cerrarModal()" 
+                    class="text-white hover:text-gray-200 transition text-2xl"
+                    title="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Body del Modal -->
+        <div class="p-6 max-h-[70vh] overflow-y-auto">
+            
+            <form class="space-y-4">
+
+                <!-- Nombre -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <i class="fas fa-user text-blue-600 mr-1"></i>
+                        Nombre Completo *
+                    </label>
+                    <input type="text" 
+                        [(ngModel)]="empleadoForm.nombre" 
+                        name="nombre"
+                        placeholder="Ej: Juan Pérez García"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required />
+                </div>
+
+                <!-- Cédula -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <i class="fas fa-id-card text-blue-600 mr-1"></i>
+                        Cédula *
+                    </label>
+                    <input type="text" 
+                        [(ngModel)]="empleadoForm.cedula" 
+                        name="cedula"
+                        placeholder="Ej: 1234567890"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required />
+                    <p class="text-xs text-gray-500 mt-1">Mínimo 5 caracteres</p>
+                </div>
+
+                <!-- Empresa (con selector dropdown) -->
+                <div class="dropdown-empresa">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <i class="fas fa-building text-blue-600 mr-1"></i>
+                        Empresa *
+                    </label>
+
+                    <!-- Si ya hay empresa seleccionada -->
+                    <div *ngIf="empresaSeleccionada" 
+                        class="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex-1">
+                            <p class="font-semibold text-blue-900">{{ empresaSeleccionada.nombre }}</p>
+                            <p class="text-sm text-blue-600">{{ empresaSeleccionada.contacto || 'Sin contacto' }}</p>
+                        </div>
+                        <button type="button" 
+                            (click)="cambiarEmpresa()"
+                            class="text-blue-600 hover:text-blue-800 px-3 py-1 border border-blue-300 rounded-lg text-sm transition">
+                            Cambiar
+                        </button>
+                        <button type="button" 
+                            (click)="limpiarEmpresa()"
+                            class="text-red-600 hover:text-red-800 px-3 py-1 border border-red-300 rounded-lg text-sm transition">
+                            Quitar
+                        </button>
+                    </div>
+
+                    <!-- Buscador de empresa -->
+                    <div *ngIf="!empresaSeleccionada">
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" 
+                                [(ngModel)]="searchEmpresa"
+                                (ngModelChange)="filtrarEmpresas()"
+                                (focus)="mostrarDropdownEmpresa = true"
+                                name="searchEmpresa"
+                                placeholder="Buscar empresa por nombre o contacto..."
+                                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                        </div>
+
+                        <!-- Dropdown de empresas -->
+                        <div *ngIf="mostrarDropdownEmpresa && empresasFiltradas.length > 0"
+                            class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <button type="button"
+                                *ngFor="let empresa of empresasFiltradas"
+                                (click)="seleccionarEmpresa(empresa)"
+                                class="w-full text-left px-4 py-3 hover:bg-blue-50 transition border-b border-gray-100 last:border-b-0">
+                                <p class="font-semibold text-gray-800">{{ empresa.nombre }}</p>
+                                <p class="text-sm text-gray-600">{{ empresa.contacto || 'Sin contacto' }}</p>
+                            </button>
+                        </div>
+
+                        <!-- Sin resultados -->
+                        <div *ngIf="mostrarDropdownEmpresa && searchEmpresa && empresasFiltradas.length === 0"
+                            class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg p-4 text-center text-gray-500">
+                            No se encontraron empresas
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Código de Barras -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <i class="fas fa-barcode text-blue-600 mr-1"></i>
+                        Código de Barras
+                    </label>
+                    <input type="text" 
+                        [(ngModel)]="empleadoForm.codigo_barras" 
+                        name="codigo_barras"
+                        placeholder="Ej: 1234567890123"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+
+                <!-- Código QR -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <i class="fas fa-qrcode text-blue-600 mr-1"></i>
+                        Código QR
+                    </label>
+                    <input type="text" 
+                        [(ngModel)]="empleadoForm.codigo_qr" 
+                        name="codigo_qr"
+                        placeholder="Código QR (opcional)"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+
+                <!-- Grid de 2 columnas -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <!-- Max comidas por día -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="fas fa-utensils text-blue-600 mr-1"></i>
+                            Máximo Comidas/Día *
+                        </label>
+                        <input type="number" 
+                            [(ngModel)]="empleadoForm.max_asistencias_por_dia" 
+                            name="max_asistencias"
+                            min="1" 
+                            max="10"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required />
+                        <p class="text-xs text-gray-500 mt-1">Entre 1 y 10</p>
+                    </div>
+
+                    <!-- Ubicación Empleado -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="fas fa-map-marker-alt text-blue-600 mr-1"></i>
+                            Ubicación Empleado
+                        </label>
+                        <input type="text" 
+                            [(ngModel)]="empleadoForm.id_ubicacion_empleado" 
+                            name="ubicacion_empleado"
+                            placeholder="Código de ubicación"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    </div>
+
+                </div>
+
+                <!-- Checkboxes -->
+                <div class="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    
+                    <!-- Aplica Subsidio -->
+                    <div class="flex items-center">
+                        <input type="checkbox" 
+                            [(ngModel)]="empleadoForm.aplica_subsidio" 
+                            name="aplica_subsidio"
+                            id="aplica_subsidio"
+                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                        <label for="aplica_subsidio" class="ml-2 text-sm font-medium text-gray-700 cursor-pointer">
+                            <i class="fas fa-hand-holding-usd text-green-600 mr-1"></i>
+                            Aplica Subsidio
+                        </label>
+                    </div>
+
+                    <!-- Activo -->
+                    <div class="flex items-center">
+                        <input type="checkbox" 
+                            [(ngModel)]="empleadoForm.activo" 
+                            name="activo"
+                            id="activo"
+                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                        <label for="activo" class="ml-2 text-sm font-medium text-gray-700 cursor-pointer">
+                            <i class="fas fa-check-circle text-green-600 mr-1"></i>
+                            Empleado Activo
+                        </label>
+                    </div>
+
+                    <!-- Sincronizado -->
+                    <div class="flex items-center">
+                        <input type="checkbox" 
+                            [(ngModel)]="empleadoForm.sincronizado" 
+                            name="sincronizado"
+                            id="sincronizado"
+                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                        <label for="sincronizado" class="ml-2 text-sm font-medium text-gray-700 cursor-pointer">
+                            <i class="fas fa-sync text-blue-600 mr-1"></i>
+                            Sincronizado
+                        </label>
+                    </div>
+
+                </div>
+
+                <!-- Campos obligatorios -->
+                <p class="text-xs text-gray-500 italic">
+                    <i class="fas fa-info-circle text-blue-500 mr-1"></i>
+                    Los campos marcados con * son obligatorios
+                </p>
+
+            </form>
+
+        </div>
+
+        <!-- Footer del Modal -->
+        <div class="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end gap-3 border-t">
+            <button (click)="cerrarModal()" 
+                type="button"
+                class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
+                <i class="fas fa-times mr-2"></i>
+                Cancelar
+            </button>
+            <button (click)="guardarEmpleado()" 
+                [disabled]="loading"
+                type="button"
+                [class]="loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'"
+                class="px-6 py-2 bg-blue-600 text-white rounded-lg transition font-medium flex items-center">
+                <i *ngIf="!loading" [class]="modoEdicion ? 'fas fa-save' : 'fas fa-plus'" class="mr-2"></i>
+                <i *ngIf="loading" class="fas fa-spinner fa-spin mr-2"></i>
+                {{ loading ? 'Guardando...' : (modoEdicion ? 'Actualizar' : 'Crear') }}
+            </button>
+        </div>
+
+    </div>
+</div>
+
+</div>

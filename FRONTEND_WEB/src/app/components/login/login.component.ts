@@ -26,20 +26,20 @@ export class LoginComponent {
   onSubmit() {
     // Se envía el username como emailOrUsername, según lo espera el backend
     this.authControl.loginControl(this.username, this.password).subscribe({
-      next: (response) => {
-        // Si se recibe un token, lo almacenamos y redirigimos
-        if (response.token) {
-          // En caso de que el backend responda con el nombre de usuario, se utiliza ese dato
-          this.router.navigate(['/comedores/control-comidas']);
-        } else {
-          this.errorMessage = 'Usuario o contraseña incorrectos';
-        }
-      },
-      error: (error) => {
-        // Controlamos el error recibido, normalmente en error.error.error se encuentra el mensaje del backend
-        this.errorMessage = error.error.error || 'Usuario o contraseña incorrectos';
-      },
-    });
+    next: (response) => {
+      if (response.token) {
+        console.log('✅ Login exitoso, ubicaciones disponibles:', response.ubicaciones_disponibles?.length || 0);
+        
+        // ⭐ CAMBIO IMPORTANTE: Redirigir a selección de ubicación
+        this.router.navigate(['/seleccion-ubicacion']);
+      } else {
+        this.errorMessage = 'Usuario o contraseña incorrectos';
+      }
+    },
+    error: (error) => {
+      this.errorMessage = error.error.error || 'Usuario o contraseña incorrectos';
+    },
+  });
   }
 
   togglePassword() {

@@ -1,315 +1,530 @@
-// src/controllers/usuariosController.ts
+// src/controller/usuarios_plataforma/usuariosController.ts
+import { Request, Response } from 'express';
+import validator from 'validator';
+import { Usuario } from '../../models/usuarios_plataforma/Usuario';
 
-import { Request, Response, NextFunction } from 'express'
-import validator from 'validator'
-import { Usuario } from '../../models/usuarios_plataforma/Usuario'
-import { UsuarioRol } from '../../models/usuarios_plataforma/UsuarioRol'
-import { UsuarioPerfil } from '../../models/usuarios_plataforma/UsuarioPerfil'
-
-export const authorizeRole = (allowedRoles: string[]) =>
-  (req: Request, res: Response, next: NextFunction): void => {
-    const user = (req as any).user
-    if (!user || !allowedRoles.includes(user.role)) {
-      res.status(403).json({ error: 'No tienes permiso para ver usuarios' })
-      return
-    }
-    next()
-  }
-
-export const listarUsuarios = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { role, empresa_id } = (req as any).user
-    const usuarios = role === 'supAdministrador'
-      ? await Usuario.listar()
-      : await Usuario.listarPorEmpresa(empresa_id)
-    res.status(200).json(usuarios)
-  } catch (err) {
-    console.error('Error en listarUsuarios:', err)
-    next(err)
-  }
+/** Helper: Extraer contexto de auditoría */
+function getAuditoriaContext(req: Request) {
+  return {
+    usuario_id: req.user!.id,
+    usuario_nombre: req.user!.nombre_usuario,
+    ip: req.ip || req.socket.remoteAddress,
+    user_agent: req.get('user-agent')
+  };
 }
 
-export const crearUsuario = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
+/**
+ * GET /api/usuarios
+ * Listar todos los usuarios con filtros
+ */
+export const listarUsuarios = async (req: Request, res: Response): Promise<void> => {
   try {
-    const {
-      email,
-      nombre_usuario,
-      password,
-      empresa_id,
-      rolId,      // opcional
-      perfilId    // opcional
-    } = req.body
+    const filters: any = {};
 
-    // validaciones básicas
-    if (!email || !nombre_usuario || !password || !empresa_id) {
-      res.status(400).json({ error: 'Faltan campos obligatorios' })
-      return
-    }
-    if (!validator.isEmail(email)) {
-      res.status(400).json({ error: 'Email inválido' })
-      return
-    }
-    if (!validator.isAlphanumeric(nombre_usuario)) {
-      res.status(400).json({ error: 'Usuario inválido' })
-      return
+    if (req.query.empresa_id) {
+      filters.empresa_id = Number(req.query.empresa_id);
     }
 
-    // 1) crear usuario en 'usuarios'
-    const resultUsuario = await Usuario.crear(
-      email,
-      nombre_usuario,
-      password,
-      empresa_id
-    )
-    if (!resultUsuario.success) {
-      res.status(500).json({ error: resultUsuario.error })
-      return
+    if (req.query.ubicacion_id) {
+      filters.ubicacion_id = Number(req.query.ubicacion_id);
     }
 
-    // extraer el nuevo ID
-    const nuevo = resultUsuario.data as any
-    const userId = nuevo.id ?? nuevo.insertId
-
-    // 2) asignar rol si viene
-    if (rolId !== undefined) {
-      const validRoleIds = [1, 2, 3, 4, 5, 6] 
-      if (!validRoleIds.includes(rolId)) {
-        res.status(400).json({ error: 'Rol no válido' })
-        return
-      }
-      const resultRol = await UsuarioRol.asignarRol(userId, rolId)
-      if (!resultRol.success) {
-        res.status(500).json({ error: resultRol.error })
-        return
-      }
+    if (req.query.activo !== undefined) {
+      filters.activo = req.query.activo === 'true';
     }
 
-    // 3) asignar perfil si viene
-    if (perfilId !== undefined) {
-      const validPerfilIds = [1, 2, 3, 4]   // ajusta según tu tabla 'perfiles'
-      if (!validPerfilIds.includes(perfilId)) {
-        res.status(400).json({ error: 'Perfil no válido' })
-        return
-      }
-      await UsuarioPerfil.asignarPerfil(userId, perfilId)
+    if (req.query.rol_id) {
+      filters.rol_id = Number(req.query.rol_id);
     }
 
-    // 4) opcionalmente, devolver lista de roles y perfiles asignados
-    const rolesAsignados    = rolId    ? await UsuarioRol.listarRoles(userId)    : []
-    const perfilesAsignados = perfilId ? await UsuarioPerfil.listarPorUsuario(userId) : []
-
-    res.status(201).json({
-      id: userId,
-      email,
-      nombre_usuario,
-      empresa_id,
-      roles: rolesAsignados,
-      perfiles: perfilesAsignados
-    })
-  } catch (err) {
-    console.error('Error en crearUsuario:', err)
-    next(err)
-  }
-}
-
-export const editarUsuarioConRoles = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const id = Number(req.params.id)
-    const {
-      email,
-      nombre_usuario,
-      password,
-      empresa_id,
-
-      // roles
-      roles,
-      rolId,
-
-      // perfiles
-      perfiles,
-      perfilId
-    } = req.body
-
-    // 1) Validar ID
-    if (!validator.isNumeric(String(id))) {
-      res.status(400).json({ error: 'ID inválido' })
-      return
+    if (req.query.perfil_id) {
+      filters.perfil_id = Number(req.query.perfil_id);
     }
 
-    // 2) Normalizar roles a array de números
-    let rolesToSync: number[] | undefined
-    if (Array.isArray(roles)) {
-      rolesToSync = roles.map(r => Number(r))
-    } else if (rolId !== undefined) {
-      rolesToSync = [Number(rolId)]
+    // Si no es SuperAdmin, solo ver usuarios de su empresa
+    if (!req.user!.roles.includes('supAdministrador')) {
+      filters.empresa_id = req.user!.empresa_id;
     }
 
-    // 3) Normalizar perfiles a array de números
-    let perfilesToSync: number[] | undefined
-    if (Array.isArray(perfiles)) {
-      perfilesToSync = perfiles.map(p => Number(p))
-    } else if (perfilId !== undefined) {
-      perfilesToSync = [Number(perfilId)]
-    }
-
-    // 4) Ejecutar edición de usuario + roles (dentro de transacción si tu modelo lo hace)
-    const result = await Usuario.editarConRoles(id, {
-      email,
-      nombre_usuario,
-      password,
-      empresa_id,
-      roles: rolesToSync
-    })
-
-    if (!result.success) {
-      res.status(404).json({ error: result.error })
-      return
-    }
-
-    // 5) Sincronizar tabla usuario_perfiles si vienen perfiles a controlar
-    if (perfilesToSync) {
-      // Obtener perfiles actuales
-      const actuales = await UsuarioPerfil.listarPorUsuario(id)
-      const actualesIds = actuales.map((u: any) => u.perfil_id)
-
-      // Determinar qué agregar y qué quitar
-      const aAgregar = perfilesToSync.filter(p => !actualesIds.includes(p))
-      const aQuitar  = actualesIds.filter(p => !perfilesToSync!.includes(p))
-
-      // Agregar perfiles nuevos
-      for (const pid of aAgregar) {
-        await UsuarioPerfil.asignarPerfil(id, pid)
-      }
-      // Quitar perfiles que ya no deben existir
-      for (const pid of aQuitar) {
-        await UsuarioPerfil.quitarPerfil(id, pid)
-      }
-    }
-
-    // 6) Volver a cargar roles y perfiles para la respuesta
-    const rolesActualizados    = rolesToSync    ? await UsuarioRol.listarRoles(id)    : []
-    const perfilesActualizados = perfilesToSync ? await UsuarioPerfil.listarPorUsuario(id) : []
+    const usuarios = await Usuario.getAll(filters);
 
     res.status(200).json({
-      message: 'Usuario, roles y perfiles actualizados',
-      data: result.data,
-      roles: rolesActualizados,
-      perfiles: perfilesActualizados
-    })
-  } catch (err) {
-    console.error('Error en editarUsuarioConRoles:', err)
-    next(err)
+      total: usuarios.length,
+      data: usuarios
+    });
+  } catch (error: any) {
+    console.error('Error en listarUsuarios:', error);
+    res.status(500).json({ error: 'Error al listar usuarios' });
   }
-}
+};
 
-export const editarUsuarioParcial = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
+/**
+ * GET /api/usuarios/:id
+ * Obtener usuario por ID con estadísticas
+ */
+export const obtenerUsuario = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params
-    if (!validator.isNumeric(id)) {
-      res.status(400).json({ error: 'ID inválido' })
-      return
+    const id = Number(req.params.id);
+
+    if (isNaN(id)) {
+      res.status(400).json({ error: 'ID inválido' });
+      return;
     }
 
-    const { email, nombre_usuario, rol, empresa_id, password } = req.body
-    const updateData: any = {}
+    const usuario = await Usuario.getById(id);
 
-    if (email !== undefined) {
-      if (!validator.isEmail(email)) {
-        res.status(400).json({ error: 'Email inválido' })
-        return
-      }
-      updateData.email = email
-    }
-    if (nombre_usuario !== undefined) {
-      if (!validator.isAlphanumeric(nombre_usuario)) {
-        res.status(400).json({ error: 'Usuario inválido' })
-        return
-      }
-      updateData.nombre_usuario = nombre_usuario
-    }
-    if (rol !== undefined) {
-      const rolesValid = [
-        'supAdministrador',
-        'admin externo',
-        'admin',
-        'supervisor',
-        'usuario',
-        'comensal'
-      ]
-      if (!rolesValid.includes(rol)) {
-        res.status(400).json({ error: 'Rol no válido' })
-        return
-      }
-      updateData.rol = rol
-    }
-    if (empresa_id !== undefined) {
-      if (!validator.isNumeric(String(empresa_id))) {
-        res.status(400).json({ error: 'Empresa inválida' })
-        return
-      }
-      updateData.empresa_id = empresa_id
-    }
-    if (password !== undefined && password.trim()) {
-      updateData.password = password
+    if (!usuario) {
+      res.status(404).json({ error: 'Usuario no encontrado' });
+      return;
     }
 
-    if (!Object.keys(updateData).length) {
-      res.status(400).json({ error: 'Nada que actualizar' })
-      return
+    // Si no es SuperAdmin, solo puede ver usuarios de su empresa
+    if (!req.user!.roles.includes('supAdministrador') && usuario.empresa_id !== req.user!.empresa_id) {
+      res.status(403).json({ error: 'No tienes permiso para ver este usuario' });
+      return;
     }
 
-    const result = await Usuario.editarConRoles(Number(id), updateData)
-    if (!result.success) {
-      res.status(404).json({ error: result.error })
-      return
-    }
+    const stats = await Usuario.getStats(id);
 
-    res
-      .status(200)
-      .json({ message: 'Usuario actualizado', data: result.data })
-  } catch (err) {
-    console.error('Error en editarUsuarioParcial:', err)
-    next(err)
+    res.status(200).json({
+      ...usuario,
+      stats
+    });
+  } catch (error: any) {
+    console.error('Error en obtenerUsuario:', error);
+    res.status(500).json({ error: 'Error al obtener usuario' });
   }
-}
+};
 
-export const eliminarUsuario = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
+/**
+ * POST /api/usuarios
+ * Crear nuevo usuario
+ */
+export const crearUsuario = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params
-    if (!validator.isNumeric(id)) {
-      res.status(400).json({ error: 'ID inválido' })
-      return
+    const {
+      email,
+      nombre_usuario,
+      password,
+      empresa_id,
+      ubicacion_id,
+      roles = [],
+      perfiles = []
+    } = req.body;
+
+    // Validaciones básicas
+    if (!email || !nombre_usuario || !password || !empresa_id) {
+      res.status(400).json({ 
+        error: 'Campos obligatorios: email, nombre_usuario, password, empresa_id' 
+      });
+      return;
     }
 
-    const result = await Usuario.eliminar(Number(id))
-    if (!result.success) {
-      res.status(404).json({ error: result.error })
-      return
+    if (!validator.isEmail(email)) {
+      res.status(400).json({ error: 'Email inválido' });
+      return;
     }
 
-    res.status(200).json({ message: 'Usuario eliminado' })
-  } catch (err) {
-    console.error('Error en eliminarUsuario:', err)
-    next(err)
+    if (password.length < 6) {
+      res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+      return;
+    }
+
+    // Si no es SuperAdmin, solo puede crear usuarios en su empresa
+    if (!req.user!.roles.includes('supAdministrador') && empresa_id !== req.user!.empresa_id) {
+      res.status(403).json({ error: 'No puedes crear usuarios en otra empresa' });
+      return;
+    }
+
+    // Validar roles
+    if (!Array.isArray(roles)) {
+      res.status(400).json({ error: 'roles debe ser un array' });
+      return;
+    }
+
+    // Validar perfiles
+    if (!Array.isArray(perfiles)) {
+      res.status(400).json({ error: 'perfiles debe ser un array' });
+      return;
+    }
+
+    const usuarioId = await Usuario.create(
+      {
+        email,
+        nombre_usuario,
+        password,
+        empresa_id,
+        ubicacion_id
+      },
+      roles,
+      perfiles,
+      getAuditoriaContext(req)
+    );
+
+    const usuarioCreado = await Usuario.getById(usuarioId);
+
+    res.status(201).json({
+      mensaje: 'Usuario creado exitosamente',
+      data: usuarioCreado
+    });
+
+    console.log(`✅ USUARIO: Creado usuario_id=${usuarioId} por usuario_id=${req.user!.id}`);
+
+  } catch (error: any) {
+    console.error('Error en crearUsuario:', error);
+
+    if (error.message === 'El email ya está registrado') {
+      res.status(409).json({ error: error.message });
+    } else if (error.message === 'El nombre de usuario ya está en uso') {
+      res.status(409).json({ error: error.message });
+    } else if (error.message === 'Empresa no encontrada o inactiva') {
+      res.status(400).json({ error: error.message });
+    } else if (error.message === 'Ubicación no encontrada o inactiva') {
+      res.status(400).json({ error: error.message });
+    } else if (error.message === 'La ubicación no pertenece a la empresa seleccionada') {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Error al crear usuario' });
+    }
   }
-}
+};
+
+/**
+ * PUT /api/usuarios/:id
+ * Actualizar usuario completo (con roles y perfiles)
+ */
+export const editarUsuarioConRoles = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+
+    if (isNaN(id)) {
+      res.status(400).json({ error: 'ID inválido' });
+      return;
+    }
+
+    const {
+      email,
+      nombre_usuario,
+      password,
+      empresa_id,
+      ubicacion_id,
+      roles,
+      perfiles
+    } = req.body;
+
+    // Verificar que el usuario existe
+    const usuarioExistente = await Usuario.getById(id);
+    if (!usuarioExistente) {
+      res.status(404).json({ error: 'Usuario no encontrado' });
+      return;
+    }
+
+    // Si no es SuperAdmin, solo puede editar usuarios de su empresa
+    if (!req.user!.roles.includes('supAdministrador') && usuarioExistente.empresa_id !== req.user!.empresa_id) {
+      res.status(403).json({ error: 'No tienes permiso para editar este usuario' });
+      return;
+    }
+
+    // Validar email si se proporciona
+    if (email && !validator.isEmail(email)) {
+      res.status(400).json({ error: 'Email inválido' });
+      return;
+    }
+
+    // Validar password si se proporciona
+    if (password && password.length < 6) {
+      res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+      return;
+    }
+
+    const updated = await Usuario.update(
+      id,
+      {
+        email,
+        nombre_usuario,
+        password,
+        empresa_id,
+        ubicacion_id
+      },
+      roles,
+      perfiles,
+      getAuditoriaContext(req)
+    );
+
+    if (!updated) {
+      res.status(404).json({ error: 'Usuario no encontrado o sin cambios' });
+      return;
+    }
+
+    const usuarioActualizado = await Usuario.getById(id);
+
+    res.status(200).json({
+      mensaje: 'Usuario actualizado exitosamente',
+      data: usuarioActualizado
+    });
+
+    console.log(`✅ USUARIO: Actualizado usuario_id=${id} por usuario_id=${req.user!.id}`);
+
+  } catch (error: any) {
+    console.error('Error en editarUsuarioConRoles:', error);
+
+    if (error.message === 'Usuario no encontrado') {
+      res.status(404).json({ error: error.message });
+    } else if (error.message === 'El email ya está registrado') {
+      res.status(409).json({ error: error.message });
+    } else if (error.message === 'El nombre de usuario ya está en uso') {
+      res.status(409).json({ error: error.message });
+    } else if (error.message === 'Empresa no encontrada o inactiva') {
+      res.status(400).json({ error: error.message });
+    } else if (error.message === 'Ubicación no encontrada o inactiva') {
+      res.status(400).json({ error: error.message });
+    } else if (error.message === 'La ubicación no pertenece a la empresa seleccionada') {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Error al actualizar usuario' });
+    }
+  }
+};
+
+/**
+ * PATCH /api/usuarios/:id
+ * Actualizar usuario parcial (sin roles ni perfiles)
+ */
+export const editarUsuarioParcial = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+
+    if (isNaN(id)) {
+      res.status(400).json({ error: 'ID inválido' });
+      return;
+    }
+
+    const { email, nombre_usuario, password, empresa_id, ubicacion_id } = req.body;
+
+    // Verificar que el usuario existe
+    const usuarioExistente = await Usuario.getById(id);
+    if (!usuarioExistente) {
+      res.status(404).json({ error: 'Usuario no encontrado' });
+      return;
+    }
+
+    // Si no es SuperAdmin, solo puede editar usuarios de su empresa
+    if (!req.user!.roles.includes('supAdministrador') && usuarioExistente.empresa_id !== req.user!.empresa_id) {
+      res.status(403).json({ error: 'No tienes permiso para editar este usuario' });
+      return;
+    }
+
+    // Validar email si se proporciona
+    if (email && !validator.isEmail(email)) {
+      res.status(400).json({ error: 'Email inválido' });
+      return;
+    }
+
+    // Validar password si se proporciona
+    if (password && password.length < 6) {
+      res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+      return;
+    }
+
+    const updated = await Usuario.update(
+      id,
+      {
+        email,
+        nombre_usuario,
+        password,
+        empresa_id,
+        ubicacion_id
+      },
+      undefined,
+      undefined,
+      getAuditoriaContext(req)
+    );
+
+    if (!updated) {
+      res.status(404).json({ error: 'Usuario no encontrado o sin cambios' });
+      return;
+    }
+
+    const usuarioActualizado = await Usuario.getById(id);
+
+    res.status(200).json({
+      mensaje: 'Usuario actualizado exitosamente',
+      data: usuarioActualizado
+    });
+
+    console.log(`✅ USUARIO: Actualizado parcial usuario_id=${id} por usuario_id=${req.user!.id}`);
+
+  } catch (error: any) {
+    console.error('Error en editarUsuarioParcial:', error);
+
+    if (error.message === 'Usuario no encontrado') {
+      res.status(404).json({ error: error.message });
+    } else if (error.message === 'El email ya está registrado') {
+      res.status(409).json({ error: error.message });
+    } else if (error.message === 'El nombre de usuario ya está en uso') {
+      res.status(409).json({ error: error.message });
+    } else if (error.message === 'Empresa no encontrada o inactiva') {
+      res.status(400).json({ error: error.message });
+    } else if (error.message === 'Ubicación no encontrada o inactiva') {
+      res.status(400).json({ error: error.message });
+    } else if (error.message === 'La ubicación no pertenece a la empresa seleccionada') {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Error al actualizar usuario' });
+    }
+  }
+};
+
+/**
+ * PATCH /api/usuarios/:id/status
+ * Cambiar estado (activar/inactivar)
+ */
+export const cambiarEstatusUsuario = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const { activo } = req.body;
+
+    if (isNaN(id)) {
+      res.status(400).json({ error: 'ID inválido' });
+      return;
+    }
+
+    if (typeof activo !== 'boolean') {
+      res.status(400).json({ error: 'El campo activo debe ser un booleano' });
+      return;
+    }
+
+    // Verificar que el usuario existe
+    const usuarioExistente = await Usuario.getById(id);
+    if (!usuarioExistente) {
+      res.status(404).json({ error: 'Usuario no encontrado' });
+      return;
+    }
+
+    // Si no es SuperAdmin, solo puede cambiar estado de usuarios de su empresa
+    if (!req.user!.roles.includes('supAdministrador') && usuarioExistente.empresa_id !== req.user!.empresa_id) {
+      res.status(403).json({ error: 'No tienes permiso para cambiar el estado de este usuario' });
+      return;
+    }
+
+    const changed = await Usuario.changeStatus(id, activo, getAuditoriaContext(req));
+
+    if (!changed) {
+      res.status(404).json({ error: 'Usuario no encontrado' });
+      return;
+    }
+
+    const usuarioActualizado = await Usuario.getById(id);
+
+    res.status(200).json({
+      mensaje: `Usuario ${activo ? 'activado' : 'inactivado'} exitosamente`,
+      data: usuarioActualizado
+    });
+
+    console.log(`✅ USUARIO: Estatus cambiado usuario_id=${id} a ${activo ? 'activo' : 'inactivo'}`);
+
+  } catch (error: any) {
+    console.error('Error en cambiarEstatusUsuario:', error);
+
+    if (error.message.includes('ya está')) {
+      res.status(400).json({ error: error.message });
+    } else if (error.message.includes('No se puede inactivar')) {
+      res.status(409).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Error al cambiar estado del usuario' });
+    }
+  }
+};
+
+/**
+ * DELETE /api/usuarios/:id
+ * Eliminar físicamente (solo SuperAdmin)
+ */
+export const eliminarUsuario = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+
+    if (isNaN(id)) {
+      res.status(400).json({ error: 'ID inválido' });
+      return;
+    }
+
+    const deleted = await Usuario.delete(id, getAuditoriaContext(req));
+
+    if (!deleted) {
+      res.status(404).json({ error: 'Usuario no encontrado' });
+      return;
+    }
+
+    res.status(200).json({
+      mensaje: 'Usuario eliminado exitosamente'
+    });
+
+    console.log(`✅ USUARIO: Eliminado usuario_id=${id} por usuario_id=${req.user!.id}`);
+
+  } catch (error: any) {
+    console.error('Error en eliminarUsuario:', error);
+
+    if (error.message === 'Usuario no encontrado') {
+      res.status(404).json({ error: error.message });
+    } else if (error.message.includes('No se puede eliminar')) {
+      res.status(409).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Error al eliminar usuario' });
+    }
+  }
+};
+
+/**
+ * GET /api/usuarios/:id/historial
+ * Obtener historial de auditoría
+ */
+export const obtenerHistorialUsuario = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+
+    if (isNaN(id)) {
+      res.status(400).json({ error: 'ID inválido' });
+      return;
+    }
+
+    // Verificar que el usuario existe
+    const usuario = await Usuario.getById(id);
+    if (!usuario) {
+      res.status(404).json({ error: 'Usuario no encontrado' });
+      return;
+    }
+
+    // Si no es SuperAdmin, solo puede ver historial de usuarios de su empresa
+    if (!req.user!.roles.includes('supAdministrador') && usuario.empresa_id !== req.user!.empresa_id) {
+      res.status(403).json({ error: 'No tienes permiso para ver el historial de este usuario' });
+      return;
+    }
+
+    const historial = await Usuario.getHistorial(id);
+
+    res.status(200).json({
+      usuario_id: id,
+      total_registros: historial.length,
+      historial
+    });
+  } catch (error: any) {
+    console.error('Error en obtenerHistorialUsuario:', error);
+    res.status(500).json({ error: 'Error al obtener historial' });
+  }
+};
+
+// ========== FUNCIONES DE COMPATIBILIDAD (deprecadas) ==========
+
+/**
+ * @deprecated
+ */
+export const authorizeRole = (allowedRoles: string[]) =>
+  (req: Request, res: Response, next: any): void => {
+    const user = (req as any).user;
+    if (!user || !allowedRoles.includes(user.role)) {
+      res.status(403).json({ error: 'No tienes permiso para ver usuarios' });
+      return;
+    }
+    next();
+  };

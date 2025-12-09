@@ -1,0 +1,184 @@
+<!-- Venta Automatica - UI completa (responsive) -->
+
+<div class="p-4 min-h-[60vh] grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <div class="lg:col-span-2 flex flex-col gap-4">
+
+
+
+
+    <!-- Buscador -->
+    <section class="bg-white border rounded p-3">
+      <div class="flex items-center gap-2">
+        <input
+          #searchInput
+          type="text"
+          class="flex-1 border rounded px-3 py-2"
+          placeholder="Buscar producto por nombre, descripción o código..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearchInput(searchInput.value)"
+        />
+        <button type="button" class="px-3 py-2 border rounded bg-gray-50" (click)="clearSearch()">Limpiar</button>
+      </div>
+
+      <div class="mt-2 text-sm text-gray-600">
+        <span *ngIf="searchTerm && productosFiltrados.length > 0">Mostrando <strong>{{ productosFiltrados.length }}</strong> coincidencias</span>
+        <span *ngIf="searchTerm && productosFiltrados.length === 0" class="text-red-600">No se encontraron coincidencias</span>
+      </div>
+    </section>
+
+    <!-- Grid de productos -->
+    <section class="flex-1">
+      <div *ngIf="loading" class="p-4 text-gray-600">Cargando productos...</div>
+      <div *ngIf="!loading && productosFiltrados?.length === 0" class="p-4 text-gray-500">No hay productos habilitados para autocobro.</div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <button
+          *ngFor="let p of productosFiltrados"
+          (click)="selectProduct(p)"
+          type="button"
+          class="bg-white border rounded p-3 flex flex-col items-start hover:shadow-md transition"
+          title="{{ p.nombre }}"
+          [attr.aria-label]="'Agregar ' + p.nombre"
+        >
+          <div class="w-full h-28 mb-2 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+            <img *ngIf="p.imagen_url" [src]="p.imagen_url" [alt]="p.nombre" class="object-contain h-full w-full" />
+            <span *ngIf="!p.imagen_url" class="text-gray-400 text-sm">Sin imagen</span>
+          </div>
+
+          <div class="w-full">
+            <div class="font-medium text-sm truncate">{{ p.nombre }}</div>
+            <div class="text-xs text-gray-500 truncate">{{ p.descripcion }}</div>
+          </div>
+
+          <div class="mt-3 w-full flex items-baseline justify-between">
+            <div class="text-lg font-bold">${{ p.precio | number:'1.2-2' }}</div>
+            <div class="text-xs text-green-600 font-semibold">Autocobro</div>
+          </div>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Carrito / Resumen -->
+  <aside class="bg-white border rounded p-3">
+    <h3 class="font-semibold mb-2">Resumen de la transacción</h3>
+
+    <div *ngIf="cart.length === 0" class="text-gray-500 mb-2">Carrito vacío</div>
+
+    <div *ngFor="let it of cart; let i = index" class="flex items-center justify-between gap-2 border-b py-2">
+      <div class="flex-1 min-w-0">
+        <div class="font-medium truncate">{{ it.producto.nombre }}</div>
+        <div class="text-xs text-gray-500">${{ it.producto.precio | number:'1.2-2' }} x {{ it.cantidad }}</div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <input #qtyInput type="number" min="1" class="w-16 border rounded px-1 py-1 text-center" [value]="it.cantidad" (change)="setQuantity(i, qtyInput.value)" [attr.aria-label]="'Cantidad ' + it.producto.nombre" />
+        <button class="text-red-600" (click)="removeFromCart(i)" [attr.aria-label]="'Eliminar ' + it.producto.nombre">Eliminar</button>
+      </div>
+    </div>
+
+    <div class="mt-3 border-t pt-3">
+      <!-- Mostrar total bruto si no hay preview aún -->
+      <div *ngIf="!preview" class="flex justify-between items-center">
+        <div>Total estimado:</div>
+        <div class="font-bold">${{ totalCart | number:'1.2-2' }}</div>
+      </div>
+      
+      <!-- Mostrar desglose cuando hay preview (con subsidio) -->
+      <div *ngIf="preview">
+        <div class="flex justify-between items-center text-sm text-gray-600">
+          <div>Subtotal:</div>
+          <div>${{ preview.total_bruto | number:'1.2-2' }}</div>
+        </div>
+        <div *ngIf="preview.subsidio_estimado > 0" class="flex justify-between items-center text-sm text-green-600">
+          <div>Descuento subsidio:</div>
+          <div>-${{ preview.subsidio_estimado | number:'1.2-2' }}</div>
+        </div>
+        <div class="flex justify-between items-center font-bold text-lg mt-2 pt-2 border-t">
+          <div>Total a pagar:</div>
+          <div class="text-blue-600">${{ preview.total_recomendado | number:'1.2-2' }}</div>
+        </div>
+      </div>
+
+      <button class="w-full mt-3 bg-blue-600 text-white py-2 rounded disabled:opacity-60" [disabled]="cart.length === 0" (click)="openPagoModal()" aria-label="Pagar con monedero">
+        Pagar con monedero
+      </button>
+    </div>
+  </aside>
+</div>
+
+<!-- Modal: pago con monedero -->
+<div *ngIf="showPagoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+  <div class="bg-white rounded shadow-lg w-full max-w-2xl p-4">
+    <div class="flex items-center justify-between mb-3">
+      <h4 class="text-lg font-semibold">Escanea o ingresa tu monedero</h4>
+      <button class="text-gray-600 hover:text-gray-800" (click)="closePagoModal()" aria-label="Cerrar modal">✕</button>
+    </div>
+
+    <!-- Input monedero -->
+    <div class="mb-3">
+      <label class="block text-sm font-medium mb-1">Código de monedero</label>
+      <div class="flex gap-2">
+        <input #monederoInput type="text" class="flex-1 border rounded px-3 py-2" placeholder="Escanea tarjeta o escribe código" [(ngModel)]="monederoCode" (keyup.enter)="lookupMonedero()" aria-label="Código de monedero" />
+        <button class="px-3 py-2 border rounded bg-gray-50" (click)="lookupMonedero()" [disabled]="scanningMonedero">{{ scanningMonedero ? 'Buscando...' : 'Buscar' }}</button>
+      </div>
+      <div *ngIf="monederoError" class="mt-2 text-sm text-red-700 bg-red-100 p-2 rounded">{{ monederoError }}</div>
+    </div>
+
+    <!-- Empleado + preview (si existe) -->
+    <div *ngIf="empleadoSeleccionado" class="mb-3 p-3 border rounded bg-gray-50">
+      <div class="flex items-center gap-3">
+        <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+          <span class="text-sm">{{ (empleadoSeleccionado.empleado.nombre || '---').slice(0,1) }}</span>
+        </div>
+        <div class="min-w-0">
+          <div class="font-semibold truncate">{{ empleadoSeleccionado.empleado.nombre }}</div>
+          <div class="text-xs text-gray-600">ID: {{ empleadoSeleccionado.empleado.id }}</div>
+        </div>
+      </div>
+
+      <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div>
+          <div class="text-xs text-gray-500">Saldo disponible</div>
+          <div class="text-lg font-bold">${{ empleadoSeleccionado.monedero.saldo | number:'1.2-2' }}</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500">Monto a pagar</div>
+          <div class="text-lg font-bold text-blue-600">${{ preview?.total_recomendado ?? totalCart | number:'1.2-2' }}</div>
+        </div>
+      </div>
+
+      <!-- Mostrar desglose de subsidio en el modal también -->
+      <div *ngIf="preview && preview.subsidio_estimado > 0" class="mt-3 p-2 bg-green-50 rounded border border-green-200">
+        <div class="text-xs text-green-700 font-semibold mb-1">Descuento aplicado:</div>
+        <div class="flex justify-between text-sm">
+          <span>Subtotal:</span>
+          <span>${{ preview.total_bruto | number:'1.2-2' }}</span>
+        </div>
+        <div class="flex justify-between text-sm text-green-600">
+          <span>Descuento:</span>
+          <span>-${{ preview.subsidio_estimado | number:'1.2-2' }}</span>
+        </div>
+        <div class="flex justify-between text-sm font-bold border-t border-green-200 mt-1 pt-1">
+          <span>Total:</span>
+          <span>${{ preview.total_recomendado | number:'1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- NIP: solo aparece si hay preview (es decir, empleado + preview) -->
+    <div *ngIf="empleadoSeleccionado && preview" class="mb-3">
+      <label class="block font-semibold mb-1">Ingresa tu NIP</label>
+      <input type="password" class="w-full border p-3 rounded text-lg font-mono" [(ngModel)]="nip" (input)="nipError = null" (keyup.enter)="confirmarNipYRealizarCobro()" aria-label="Ingresar NIP" />
+      <div *ngIf="nipError" class="mt-2 text-red-700">{{ nipError }}</div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="flex justify-end gap-2">
+      <button class="px-4 py-2 border rounded" (click)="closePagoModal()" [disabled]="validatingNip || processingCharge">Cancelar</button>
+      <button class="px-4 py-2 bg-green-600 text-white rounded" (click)="confirmarNipYRealizarCobro()" [disabled]="!empleadoSeleccionado || !preview || validatingNip || processingCharge">
+        {{ validatingNip || processingCharge ? 'Procesando...' : 'Confirmar y Cobrar' }}
+      </button>
+    </div>
+  </div>
+</div>

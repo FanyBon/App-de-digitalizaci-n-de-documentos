@@ -1,11 +1,26 @@
+// src/controllers/recargas/monederosController.ts
 import { Request, Response, NextFunction } from 'express';
 import { Monedero } from '../../models/recargas/Monedero';
-import { Empleado } from '../../models/Empleado';
+import { Empleado } from '../../models/empleados/Empleado';
+
+// Helper para extraer datos del usuario
+const obtenerDatosUsuario = (req: Request) => {
+  const userId = req.user?.id || 0;
+  const userName = req.user?.nombre_usuario || 'Sistema';
+  const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || 
+                    req.socket.remoteAddress || 
+                    'unknown';
+  const userAgent = req.headers['user-agent'] || 'unknown';
+  return { userId, userName, ipAddress, userAgent };
+};
 
 export const listarMonederos = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const monederos = await Monedero.listar();
-    res.status(200).json(monederos);
+    res.status(200).json({
+      total: monederos.length,
+      data: monederos
+    });
   } catch (error) {
     console.error('Error en listarMonederos:', error);
     next(error);
@@ -33,21 +48,18 @@ export const consultarSaldo = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // 1) leer desde params o body
     const codigo = (req.params.codigo || req.body.codigo || '').trim();
     if (!codigo) {
       res.status(400).json({ error: 'Falta el código de barras' });
       return;
     }
 
-    // 2) llamar al modelo
     const data = await Monedero.obtenerSaldoPorCodigo(codigo);
     if (!data) {
       res.status(404).json({ error: 'No existe monedero para ese código' });
       return;
     }
 
-    // 3) responder
     res.status(200).json({
       empleado_id: data.empleado_id,
       saldo_actual: data.saldo_actual
@@ -90,24 +102,40 @@ export const crearMonedero = async (req: Request, res: Response, next: NextFunct
   try {
     const { empleado_id, saldo_actual, activo } = req.body;
 
-    // Validación básica: verifica que existan los campos
     if (!empleado_id || saldo_actual === undefined || activo === undefined) {
       res.status(400).json({ error: 'Faltan campos obligatorios: empleado_id, saldo_actual, activo' });
       return;
     }
 
-    // Crear el monedero
-    const resultMonedero = await Monedero.crear({ empleado_id, saldo_actual, activo });
+    // Obtener datos del usuario para auditoría
+    const { userId, userName, ipAddress, userAgent } = obtenerDatosUsuario(req);
+
+    // Crear el monedero CON auditoría
+    const resultMonedero = await Monedero.crear(
+      { empleado_id, saldo_actual, activo },
+      userId,
+      userName,
+      ipAddress,
+      userAgent
+    );
+
     if (!resultMonedero.success) {
-      res.status(500).json({ error: resultMonedero.error });
+      res.status(400).json({ error: resultMonedero.error });
       return;
     }
 
-    // Extraer el id del monedero recién creado
     const monedero_id = resultMonedero.data.id;
 
-    // Actualizar el empleado con el monedero_id asignado
-    const resultEmpleado = await Empleado.actualizar(Number(empleado_id), { monedero_id });
+    // Actualizar el empleado CON auditoría
+    const resultEmpleado = await Empleado.actualizar(
+      Number(empleado_id),
+      { monedero_id },
+      userId,
+      userName,
+      ipAddress,
+      userAgent
+    );
+
     if (!resultEmpleado.success) {
       res.status(500).json({ error: 'Monedero creado, pero no se pudo asignar al empleado' });
       return;
@@ -123,21 +151,35 @@ export const crearMonedero = async (req: Request, res: Response, next: NextFunct
     next(error);
   }
 };
+
 export const editarMonedero = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    const data = req.body; // Puede incluir empleado_id, saldo_actual y/o activo
+    const data = req.body;
 
     if (!id || isNaN(Number(id))) {
       res.status(400).json({ error: 'El ID es obligatorio y debe ser numérico' });
       return;
     }
 
-    const result = await Monedero.editar(Number(id), data);
+    // Obtener datos del usuario para auditoría
+    const { userId, userName, ipAddress, userAgent } = obtenerDatosUsuario(req);
+
+    // Editar CON auditoría
+    const result = await Monedero.editar(
+      Number(id),
+      data,
+      userId,
+      userName,
+      ipAddress,
+      userAgent
+    );
+
     if (!result.success) {
       res.status(404).json({ error: result.error });
       return;
     }
+
     res.status(200).json({ message: 'Monedero actualizado correctamente', data: result.data });
   } catch (error) {
     console.error('Error en editarMonedero:', error);
@@ -154,14 +196,59 @@ export const eliminarMonedero = async (req: Request, res: Response, next: NextFu
       return;
     }
 
-    const result = await Monedero.eliminar(Number(id));
+    // Obtener datos del usuario para auditoría
+    const { userId, userName, ipAddress, userAgent } = obtenerDatosUsuario(req);
+
+    // Eliminar CON auditoría
+    const result = await Monedero.eliminar(
+      Number(id),
+      userId,
+      userName,
+      ipAddress,
+      userAgent
+    );
+
     if (!result.success) {
       res.status(404).json({ error: result.error });
       return;
     }
-    res.status(200).json({ message: 'Monedero eliminado correctamente' });
+
+    res.status(200).json({ message: 'Monedero desactivado correctamente' });
   } catch (error) {
     console.error('Error en eliminarMonedero:', error);
+    next(error);
+  }
+};
+
+export const eliminarMonederoPermanente = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    if (!id || isNaN(Number(id))) {
+      res.status(400).json({ error: 'El ID es obligatorio y debe ser numérico' });
+      return;
+    }
+
+    // Obtener datos del usuario para auditoría
+    const { userId, userName, ipAddress, userAgent } = obtenerDatosUsuario(req);
+
+    // Eliminar permanentemente CON auditoría
+    const result = await Monedero.eliminarPermanente(
+      Number(id),
+      userId,
+      userName,
+      ipAddress,
+      userAgent
+    );
+
+    if (!result.success) {
+      res.status(400).json({ error: result.error });
+      return;
+    }
+
+    res.status(200).json({ message: 'Monedero eliminado permanentemente' });
+  } catch (error) {
+    console.error('Error en eliminarMonederoPermanente:', error);
     next(error);
   }
 };

@@ -1,4 +1,4 @@
-import { getConnection } from '../../config/db_controlcomidas';
+import { getPool } from '../../config/db_controlcomidas';
 
 export interface ImpuestoInterface {
   id?: number;
@@ -12,7 +12,7 @@ export interface ImpuestoInterface {
 
 export class ImpuestoModel {
   static async listar(): Promise<ImpuestoInterface[]> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     const [rows]: any[] = await conn.query(
       'SELECT * FROM impuestos WHERE activo = 1'
     );
@@ -20,7 +20,7 @@ export class ImpuestoModel {
   }
 
   static async obtenerPorId(id: number): Promise<ImpuestoInterface | null> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     const [rows]: any[] = await conn.query(
       'SELECT * FROM impuestos WHERE id = ? AND activo = 1',
       [id]
@@ -31,7 +31,7 @@ export class ImpuestoModel {
   static async crear(
     data: ImpuestoInterface
   ): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     const sql = `
       INSERT INTO impuestos
         (nombre, descripcion, porcentaje, activo, created_at, updated_at)
@@ -53,7 +53,7 @@ export class ImpuestoModel {
     id: number,
     data: Partial<ImpuestoInterface>
   ): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     const sql = `
       UPDATE impuestos
          SET nombre      = ?,
@@ -77,7 +77,7 @@ export class ImpuestoModel {
   }
 
   static async eliminar(id: number): Promise<{ success: boolean; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     const sql = `
       UPDATE impuestos
          SET activo     = 0,

@@ -1,4 +1,4 @@
-import { getConnection } from '../../config/db_controlcomidas';
+import { getPool } from '../../config/db_controlcomidas';
 
 export interface VentaPDVInterface {
   id?: number;
@@ -7,9 +7,13 @@ export interface VentaPDVInterface {
   usuario_id: number;
   total_venta: number;
   subsidio_aplicado: number;
-  tipo_venta: 'pdv' | 'comedor' | 'mixto';
+  tipo_venta: 'pdv' | 'comedor' | 'mixto' | 'AUTOCOBRO';
   monedero_id: number;
-  metodo_pago_id: number;  // <-- Agregamos el campo
+  metodo_pago_id: number;
+  impuesto_id?: number;
+  impuesto_monto?: number;
+  punto_venta_id?: number | null;      // ✅ NUEVO
+  punto_venta_codigo?: string | null;  // ✅ NUEVO
   referencia?: string;
   created_at?: Date;
 }
@@ -20,15 +24,14 @@ export class VentaPDV {
   // Formato: VENTA-{timestamp}-{sufijo de 3 dígitos}
   static generarReferencia(): string {
     const prefix = "VENTA-";
-    const timestamp = Date.now(); // número único basado en la fecha
-    // Genera un sufijo aleatorio de 3 dígitos (ej. 981)
+    const timestamp = Date.now();
     const suffix = Math.floor(Math.random() * 1000).toString().padStart(3, "0");
     return `${prefix}${timestamp}-${suffix}`;
   }
 
   // Listar todas las ventas
   static async listar(): Promise<VentaPDVInterface[]> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [rows]: [any[], any] = await conn.query('SELECT * FROM ventas_pdv');
       return rows;
@@ -40,7 +43,7 @@ export class VentaPDV {
 
   // Obtener una venta por ID
   static async obtenerPorId(id: number): Promise<VentaPDVInterface | null> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [rows]: [any[], any] = await conn.query('SELECT * FROM ventas_pdv WHERE id = ?', [id]);
       if (rows.length === 0) return null;
@@ -53,7 +56,7 @@ export class VentaPDV {
 
   // Crear una nueva venta
   static async crear(venta: VentaPDVInterface): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       // Si no se pasó una referencia, se genera automáticamente
       if (!venta.referencia) {
@@ -61,8 +64,12 @@ export class VentaPDV {
       }
       
       const [result]: any = await conn.query(
-        `INSERT INTO ventas_pdv (fecha_hora, empleado_id, usuario_id, total_venta, subsidio_aplicado, tipo_venta, monedero_id, metodo_pago_id, referencia, created_at) 
-         VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        `INSERT INTO ventas_pdv (
+          fecha_hora, empleado_id, usuario_id, total_venta, subsidio_aplicado, 
+          tipo_venta, monedero_id, metodo_pago_id, impuesto_id, impuesto_monto,
+          punto_venta_id, punto_venta_codigo, referencia, created_at
+        ) 
+        VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           venta.empleado_id,
           venta.usuario_id,
@@ -71,6 +78,10 @@ export class VentaPDV {
           venta.tipo_venta,
           venta.monedero_id,
           venta.metodo_pago_id,
+          venta.impuesto_id ?? null,
+          venta.impuesto_monto ?? null,
+          venta.punto_venta_id ?? null,      // ✅ NUEVO
+          venta.punto_venta_codigo ?? null,  // ✅ NUEVO
           venta.referencia
         ]
       );
@@ -87,7 +98,7 @@ export class VentaPDV {
 
   // Editar una venta
   static async editar(id: number, data: Partial<VentaPDVInterface>): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(`UPDATE ventas_pdv SET ? WHERE id = ?`, [data, id]);
       if (result.affectedRows === 0) return { success: false, error: 'Venta no encontrada' };
@@ -100,7 +111,7 @@ export class VentaPDV {
 
   // Eliminar una venta
   static async eliminar(id: number): Promise<{ success: boolean; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(`DELETE FROM ventas_pdv WHERE id = ?`, [id]);
       if (result.affectedRows === 0) return { success: false, error: 'Venta no encontrada' };

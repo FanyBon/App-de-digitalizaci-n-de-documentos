@@ -1,0 +1,84 @@
+<!-- src/app/components/configuracion/permisos/permisos.component.html -->
+
+<div class="p-6 bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Encabezado -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-shield-alt text-blue-600 mr-3"></i>
+                Gestión de Permisos
+            </h1>
+            <p class="text-gray-600">
+                Administra permisos, roles, módulos y asignaciones del sistema
+            </p>
+        </div>
+
+        <!-- TABS DE NAVEGACIÓN -->
+        <div class="bg-white rounded-lg shadow mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px">
+                    
+                    <!-- Tab Permisos -->
+                    <button (click)="cambiarTab('permisos')"
+                        [class]="tabActiva === 'permisos' 
+                            ? 'border-blue-500 text-blue-600 bg-blue-50' 
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-all">
+                        <i class="fas fa-key mr-2"></i>
+                        Permisos
+                    </button>
+
+                    <!-- Tab Rol-Permisos -->
+                    <button (click)="cambiarTab('rol-permisos')"
+                        [class]="tabActiva === 'rol-permisos' 
+                            ? 'border-green-500 text-green-600 bg-green-50' 
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-all">
+                        <i class="fas fa-user-shield mr-2"></i>
+                        Rol-Permisos
+                    </button>
+
+                    <!-- Tab Módulos Frontend -->
+                    <button (click)="cambiarTab('modulos')"
+                        [class]="tabActiva === 'modulos' 
+                            ? 'border-purple-500 text-purple-600 bg-purple-50' 
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-all">
+                        <i class="fas fa-puzzle-piece mr-2"></i>
+                        Módulos Frontend
+                    </button>
+
+                    <!-- Tab Perfil-Módulos -->
+                    <button (click)="cambiarTab('perfil-modulos')"
+                        [class]="tabActiva === 'perfil-modulos' 
+                            ? 'border-orange-500 text-orange-600 bg-orange-50' 
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-all">
+                        <i class="fas fa-id-card mr-2"></i>
+                        Perfil-Módulos
+                    </button>
+
+                </nav>
+            </div>
+        </div>
+
+        <!-- CONTENIDO DE TABS - Subcomponentes -->
+        <div class="tab-content">
+            
+            <!-- Tab 1: Lista de Permisos -->
+            <app-lista-permisos *ngIf="tabActiva === 'permisos'"></app-lista-permisos>
+
+            <!-- Tab 2: Rol-Permisos -->
+            <app-rol-permisos *ngIf="tabActiva === 'rol-permisos'"></app-rol-permisos>
+
+            <!-- Tab 3: Módulos Frontend -->
+            <app-lista-modulos *ngIf="tabActiva === 'modulos'"></app-lista-modulos>
+
+            <!-- Tab 4: Perfil-Módulos -->
+            <app-perfil-modulos *ngIf="tabActiva === 'perfil-modulos'"></app-perfil-modulos>
+
+        </div>
+
+    </div>
+</div>

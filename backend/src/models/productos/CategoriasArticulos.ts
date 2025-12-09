@@ -1,5 +1,5 @@
 // src/models/CategoriasArticulos.ts
-import { getConnection } from '../../config/db_controlcomidas';
+import { getPool } from '../../config/db_controlcomidas';
 
 export interface CategoriaArticuloInterface {
   id?: number;
@@ -15,7 +15,7 @@ export class CategoriaArticulo {
   // Validar si ya existe una categoría con el mismo nombre.
   // Si se pasa un ID para excluir, se omite ese registro (útil para la edición).
   static async existeNombre(nombre: string, excludeId?: number): Promise<boolean> {
-    const conn = await getConnection();
+    const conn = getPool('local');
     try {
       let query = 'SELECT id FROM categorias_articulos WHERE nombre = ?';
       const params: any[] = [nombre];
@@ -33,7 +33,7 @@ export class CategoriaArticulo {
 
   // Listar todas las categorías
   static async listar(): Promise<CategoriaArticuloInterface[]> {
-    const conn = await getConnection();
+     const conn= getPool('local');
     try {
       const [rows]: [any[], any] = await conn.query('SELECT * FROM categorias_articulos');
       return rows;
@@ -45,7 +45,7 @@ export class CategoriaArticulo {
 
   // Obtener una categoría por ID
   static async obtenerPorId(id: number): Promise<CategoriaArticuloInterface | null> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [rows]: [any[], any] = await conn.query('SELECT * FROM categorias_articulos WHERE id = ?', [id]);
       if (rows.length === 0) return null;
@@ -58,7 +58,7 @@ export class CategoriaArticulo {
 
   // Crear una nueva categoría con validación de nombre único
   static async crear(categoria: CategoriaArticuloInterface): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const existe = await CategoriaArticulo.existeNombre(categoria.nombre);
       if (existe) {
@@ -90,7 +90,7 @@ export class CategoriaArticulo {
     id: number,
     data: Partial<CategoriaArticuloInterface>
   ): Promise<{ success: boolean; data?: any; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');  
     // Si se está actualizando el nombre, validamos su unicidad
     if (data.nombre) {
       try {
@@ -114,7 +114,7 @@ export class CategoriaArticulo {
 
   // Eliminar una categoría
   static async eliminar(id: number): Promise<{ success: boolean; error?: string }> {
-    const conn = await getConnection();
+    const conn = await getPool('local');
     try {
       const [result]: any = await conn.query(`DELETE FROM categorias_articulos WHERE id = ?`, [id]);
       if (result.affectedRows === 0) return { success: false, error: 'Categoría no encontrada' };
